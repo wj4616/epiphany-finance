@@ -1,0 +1,21 @@
+[project]
+name = "epiphany-finance"
+version = "1.1.0"
+description = "Personal financial advisor skill (goatcs-harness graph + Python wrapper)."
+requires-python = ">=3.8"
+dependencies = [
+    "yfinance",        # live stock/ETF quotes (Yahoo Finance)
+    "plotly>=6,<7",    # chart figures
+    "kaleido==0.2.1",  # plotly -> PNG/SVG export
+    "weasyprint>=68",  # markdown/HTML -> PDF
+    "PyYAML",          # module frontmatter
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+epiphany-finance = "wrapper.run:main"
+
+[tool.setuptools]
+packages = ["wrapper"]

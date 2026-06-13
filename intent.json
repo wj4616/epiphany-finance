@@ -1,0 +1,25 @@
+{
+  "schema_version": "epiphany-harness.routing_intent.v1",
+  "_doc": "epiphany-finance-v2 per-node routing intents (lean hybrid; D10 forge benchmark deliverable). Lowered by goatcs_harness.coevolution compiler via build_graph.lower_intent_to_native. Signal-driven routes (has_investment_flag, data_freshness_regime) are intentionally NOT here — they are carried signals consumed in-node, not topology.",
+  "intents": {
+    "N-PREFLIGHT": {
+      "kind": "early_exit",
+      "pred": "not preflight_ok",
+      "terminal": "N-REFUSE"
+    },
+    "N-FRAME-SELECT": {
+      "kind": "quality_gate",
+      "cases": [
+        {"pred": "wealth_bracket == 'survival'", "target": "N-FRAME-SURVIVAL"},
+        {"pred": "wealth_bracket == 'hnw'", "target": "N-FRAME-HNW"}
+      ],
+      "default": "N-FRAME-STANDARD"
+    },
+    "N-STRATEGY-FANOUT": {
+      "kind": "parallel_merge",
+      "branches": ["N-STRAT-CAND-BUDGET", "N-STRAT-CAND-INCOME", "N-STRAT-CAND-PORTFOLIO"],
+      "join": "N-STRATEGY-MERGE",
+      "agg": "best_elements"
+    }
+  }
+}

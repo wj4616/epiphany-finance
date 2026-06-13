@@ -1,0 +1,102 @@
+# epiphany-finance-v2 wiring contract — one row per runtime-behavior capability (the integration DoD).
+# Vocabularies pinned to goatcs_harness/wiring/contract.py:
+#   mechanism         in {tool_call, node_body, cli_orchestration, driver_dispatch, prose-only}
+#   fired_marker.kind in {ledger_tool, cli_effect, driver_signal, node_exec}
+#   drive_class       in {deterministic, reasoning}
+#
+# Firing model: the $0 inline smoke drives the graph and pauses at the first inline REASONING node
+# (N-PREFLIGHT, the entry gate). So nearly every capability is DOWNSTREAM of an inline reasoning pause
+# and is asserted by reachability + contract (drive_class: reasoning -> FIRING-UNPROVEN, disclosed).
+# The binary ship gate (verify --strict-wiring + wiring-check + the 71-test pytest battery, incl. the
+# RL-1 liveness drive + V-COMPILER/V-ROUTE/V-TOOL/V-ENS/V-FANOUT) is the executable proof for those rows.
+wiring_contract:
+
+- id: W-01
+  requirement: N-PREFLIGHT early_exit (compiler-lowered) refuses on no-context/insufficient -> N-REFUSE.
+  mechanism: node_body
+  sites: [{node: N-PREFLIGHT}, {node: N-REFUSE}]
+  fired_marker: [{kind: driver_signal, value: "preflight_ok"}]
+  drive_class: reasoning
+  traces: [FR-V2-02, APU-V2-03]
+  smoke_input: '{"preflight_ok": true}'
+
+- id: W-02
+  requirement: Bracket-conditional report frame is a compiler-lowered quality_gate edge (not Python).
+  mechanism: node_body
+  sites: [{node: N-FRAME-SELECT}, {node: N-FRAME-SURVIVAL}, {node: N-FRAME-STANDARD}, {node: N-FRAME-HNW}, {node: N-FRAME-MERGE}]
+  fired_marker: [{kind: driver_signal, value: "report_frame"}]
+  drive_class: reasoning
+  traces: [FR-V2-02, APU-V2-02, V-ROUTE]
+  smoke_input: '{"wealth_bracket": "survival"}'
+
+- id: W-03
+  requirement: Multi-strategy parallel_merge fan-out -> best_elements merge -> strategy_plan feeds engines.
+  mechanism: node_body
+  sites: [{node: N-STRATEGY-FANOUT}, {node: N-STRAT-CAND-BUDGET}, {node: N-STRAT-CAND-INCOME}, {node: N-STRAT-CAND-PORTFOLIO}, {node: N-STRATEGY-MERGE}]
+  fired_marker: [{kind: driver_signal, value: "strategy_plan"}]
+  drive_class: reasoning
+  traces: [FR-V2-04, APU-V2-07, V-FANOUT]
+  smoke_input: '{"situation_analysis": "x"}'
+
+- id: W-04
+  requirement: N-QUOTE-FETCHER is an HC-1 retry+cache-backed tool_call with an HC-4 typed output schema.
+  mechanism: tool_call
+  sites: [{tool: data.passthrough, node: N-QUOTE-FETCHER}]
+  fired_marker: [{kind: ledger_tool, value: "data.passthrough"}]
+  drive_class: deterministic
+  traces: [FR-V2-03b, FR-V2-05, APU-V2-05, V-TOOL]
+  smoke_input: '{"quote_data_seed": {"prices": {}}}'
+
+- id: W-05
+  requirement: N-ADVERSARIAL is an ensemble quorum (N-of-M, not 1-of-1) over every monetary figure.
+  mechanism: node_body
+  sites: [{node: N-ADVERSARIAL}]
+  fired_marker: [{kind: driver_signal, value: "challenge_list"}]
+  drive_class: reasoning
+  traces: [FR-V2-01, APU-V2-01, V-ENS]
+  smoke_input: '{"income_plan": {}}'
+
+- id: W-06
+  requirement: N-BENEFIT-SAFETY consumes benefit flags + income; emits benefit_safety (cliffs/ABLE/consult).
+  mechanism: node_body
+  sites: [{node: N-BENEFIT-SAFETY}]
+  fired_marker: [{kind: driver_signal, value: "benefit_safety"}]
+  drive_class: reasoning
+  traces: [FR-V2-06, APU-V2-08, V-BENEFIT]
+  smoke_input: '{"benefit_dependency_flags": {"ssdi": true}, "income_plan": {}}'
+
+- id: W-07
+  requirement: N-MACRO-FETCH fetches cited macro context read-only (injection-hardened); no write tools.
+  mechanism: tool_call
+  sites: [{tool: http.get_text, node: N-MACRO-FETCH}]
+  fired_marker: [{kind: ledger_tool, value: "http.get_text"}]
+  drive_class: deterministic
+  traces: [FR-V2-05, APU-V2-06]
+  smoke_input: '{"wealth_bracket": "middle"}'
+
+- id: W-08
+  requirement: N-HITL-APPROVE is the single in-graph HITL plan-approval pause (exit-11); approve->emit.
+  mechanism: node_body
+  sites: [{node: N-HITL-APPROVE}]
+  fired_marker: [{kind: driver_signal, value: "plan_approved"}]
+  drive_class: reasoning
+  traces: [FR-V2-07, APU-V2-09, V-UX]
+  smoke_input: '{"report_markdown": "draft"}'
+
+- id: W-09
+  requirement: HC-5 on_progress narration channel is wired (run threads render_progress to the front-end).
+  mechanism: driver_dispatch
+  sites: [{module: wrapper.run}]
+  fired_marker: [{kind: driver_signal, value: "progress_event"}]
+  drive_class: reasoning
+  traces: [FR-V2-07, APU-V2-10, HC-5]
+  smoke_input: '{}'
+
+- id: W-10
+  requirement: Quality back-edge E27 is the SOLE quality-retry authority (cap 2); no wrapper duplicate.
+  mechanism: node_body
+  sites: [{node: N-QUALITY-GATE}, {node: N-REPORT}]
+  fired_marker: [{kind: driver_signal, value: "quality_verdict"}]
+  drive_class: reasoning
+  traces: [FR-V2-03c, APU-V2-04, V-BACKEDGE]
+  smoke_input: '{"quality_verdict": "PASS"}'

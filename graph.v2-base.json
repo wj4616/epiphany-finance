@@ -1,0 +1,1984 @@
+{
+ "schema_version": "epiphany-harness.ir.v1",
+ "dialect": "native",
+ "skill_name": "epiphany-finance",
+ "skill_version": "2.0.0",
+ "determinism_class": "non-deterministic",
+ "entrypoints": [
+  "N-PREFLIGHT"
+ ],
+ "nodes": {
+  "N-PREFLIGHT": {
+   "id": "N-PREFLIGHT",
+   "name": "N-PREFLIGHT",
+   "type": "GATE",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "0",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "context_text",
+     "type": "any",
+     "signal_field": "context_text",
+     "required": false
+    },
+    {
+     "name": "mode",
+     "type": "any",
+     "signal_field": "mode",
+     "required": false
+    },
+    {
+     "name": "financial_state",
+     "type": "any",
+     "signal_field": "financial_state",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "preflight_ok",
+     "type": "flag",
+     "signal_field": "preflight_ok",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-PREFLIGHT.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-CONTEXT-INGEST": {
+   "id": "N-CONTEXT-INGEST",
+   "name": "N-CONTEXT-INGEST",
+   "type": "INGEST",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "1a",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "context_text",
+     "type": "any",
+     "signal_field": "context_text",
+     "required": false
+    },
+    {
+     "name": "financial_state",
+     "type": "any",
+     "signal_field": "financial_state",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-CONTEXT-INGEST.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-CLASSIFY": {
+   "id": "N-CLASSIFY",
+   "name": "N-CLASSIFY",
+   "type": "CLASSIFIER",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "1b",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": true
+    },
+    {
+     "name": "situation_class",
+     "type": "any",
+     "signal_field": "situation_class",
+     "required": true
+    },
+    {
+     "name": "has_investment_flag",
+     "type": "flag",
+     "signal_field": "has_investment_flag",
+     "required": true
+    },
+    {
+     "name": "location_available_flag",
+     "type": "flag",
+     "signal_field": "location_available_flag",
+     "required": true
+    },
+    {
+     "name": "priority_flags",
+     "type": "any",
+     "signal_field": "priority_flags",
+     "required": true
+    },
+    {
+     "name": "benefit_dependency_flags",
+     "type": "any",
+     "signal_field": "benefit_dependency_flags",
+     "required": true
+    },
+    {
+     "name": "data_freshness_regime",
+     "type": "any",
+     "signal_field": "data_freshness_regime",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-CLASSIFY.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-RESEARCH-ECO": {
+   "id": "N-RESEARCH-ECO",
+   "name": "N-RESEARCH-ECO",
+   "type": "ANALYZER",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "2",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    },
+    {
+     "name": "situation_class",
+     "type": "any",
+     "signal_field": "situation_class",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "economic_digest",
+     "type": "any",
+     "signal_field": "economic_digest",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-RESEARCH-ECO.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-RESEARCH-LOC": {
+   "id": "N-RESEARCH-LOC",
+   "name": "N-RESEARCH-LOC",
+   "type": "ANALYZER",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "2",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    },
+    {
+     "name": "location_available_flag",
+     "type": "any",
+     "signal_field": "location_available_flag",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "location_digest",
+     "type": "any",
+     "signal_field": "location_digest",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-RESEARCH-LOC.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-RESEARCH-MKT": {
+   "id": "N-RESEARCH-MKT",
+   "name": "N-RESEARCH-MKT",
+   "type": "ANALYZER",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "2",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    },
+    {
+     "name": "has_investment_flag",
+     "type": "any",
+     "signal_field": "has_investment_flag",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "market_digest",
+     "type": "any",
+     "signal_field": "market_digest",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-RESEARCH-MKT.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-RESEARCH-AGG": {
+   "id": "N-RESEARCH-AGG",
+   "name": "N-RESEARCH-AGG",
+   "type": "AGGREGATION",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "economic_digest",
+     "type": "any",
+     "signal_field": "economic_digest",
+     "required": false
+    },
+    {
+     "name": "location_digest",
+     "type": "any",
+     "signal_field": "location_digest",
+     "required": false
+    },
+    {
+     "name": "market_digest",
+     "type": "any",
+     "signal_field": "market_digest",
+     "required": false
+    },
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "research_digest",
+     "type": "any",
+     "signal_field": "research_digest",
+     "required": true
+    },
+    {
+     "name": "location_digest",
+     "type": "any",
+     "signal_field": "location_digest",
+     "required": true
+    },
+    {
+     "name": "market_digest",
+     "type": "any",
+     "signal_field": "market_digest",
+     "required": true
+    },
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": "AND",
+   "aggregation_policy": null,
+   "module_file": "modules/N-RESEARCH-AGG.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-SITUATION-ANALYZE": {
+   "id": "N-SITUATION-ANALYZE",
+   "name": "N-SITUATION-ANALYZE",
+   "type": "ANALYZER",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "research_digest",
+     "type": "any",
+     "signal_field": "research_digest",
+     "required": true
+    },
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    },
+    {
+     "name": "situation_class",
+     "type": "any",
+     "signal_field": "situation_class",
+     "required": false
+    },
+    {
+     "name": "priority_flags",
+     "type": "any",
+     "signal_field": "priority_flags",
+     "required": false
+    },
+    {
+     "name": "macro_context",
+     "type": "any",
+     "signal_field": "macro_context",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "situation_analysis",
+     "type": "any",
+     "signal_field": "situation_analysis",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-SITUATION-ANALYZE.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-BUDGET-ENGINE": {
+   "id": "N-BUDGET-ENGINE",
+   "name": "N-BUDGET-ENGINE",
+   "type": "GENERATOR",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "4",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": true
+    },
+    {
+     "name": "situation_analysis",
+     "type": "any",
+     "signal_field": "situation_analysis",
+     "required": false
+    },
+    {
+     "name": "economic_digest",
+     "type": "any",
+     "signal_field": "economic_digest",
+     "required": false
+    },
+    {
+     "name": "location_digest",
+     "type": "any",
+     "signal_field": "location_digest",
+     "required": false
+    },
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    },
+    {
+     "name": "strategy_plan",
+     "type": "any",
+     "signal_field": "strategy_plan",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-BUDGET-ENGINE.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-QUOTE-FETCHER": {
+   "id": "N-QUOTE-FETCHER",
+   "name": "N-QUOTE-FETCHER",
+   "type": "ANALYZER",
+   "tier": "no-llm",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "4",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "quote_data_seed",
+     "type": "any",
+     "signal_field": "quote_data_seed",
+     "required": false
+    },
+    {
+     "name": "has_investment_flag",
+     "type": "any",
+     "signal_field": "has_investment_flag",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-QUOTE-FETCHER.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": {
+    "tool": "data.passthrough",
+    "args": {
+     "value": "quote_data_seed"
+    },
+    "outputs": {
+     "quote_data": "value"
+    },
+    "retry_cache": true,
+    "_v2_real_quote": true
+   },
+   "output_schema": {
+    "quote_data": {
+     "type": "dict",
+     "required": true
+    }
+   }
+  },
+  "N-PORTFOLIO-ENGINE": {
+   "id": "N-PORTFOLIO-ENGINE",
+   "name": "N-PORTFOLIO-ENGINE",
+   "type": "GENERATOR",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "4",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": false
+    },
+    {
+     "name": "has_investment_flag",
+     "type": "any",
+     "signal_field": "has_investment_flag",
+     "required": false
+    },
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": false
+    },
+    {
+     "name": "market_digest",
+     "type": "any",
+     "signal_field": "market_digest",
+     "required": false
+    },
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "portfolio_plan",
+     "type": "any",
+     "signal_field": "portfolio_plan",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-PORTFOLIO-ENGINE.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-INCOME-ENGINE": {
+   "id": "N-INCOME-ENGINE",
+   "name": "N-INCOME-ENGINE",
+   "type": "GENERATOR",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": true
+    },
+    {
+     "name": "location_digest",
+     "type": "any",
+     "signal_field": "location_digest",
+     "required": false
+    },
+    {
+     "name": "situation_class",
+     "type": "any",
+     "signal_field": "situation_class",
+     "required": false
+    },
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-INCOME-ENGINE.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-VERIFY-BUDGET": {
+   "id": "N-VERIFY-BUDGET",
+   "name": "N-VERIFY-BUDGET",
+   "type": "VERIFIER",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "6",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "budget_verdict",
+     "type": "any",
+     "signal_field": "budget_verdict",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-VERIFY-BUDGET.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-VERIFY-INCOME": {
+   "id": "N-VERIFY-INCOME",
+   "name": "N-VERIFY-INCOME",
+   "type": "VERIFIER",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "6",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "income_verdict",
+     "type": "any",
+     "signal_field": "income_verdict",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-VERIFY-INCOME.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-ADVERSARIAL": {
+   "id": "N-ADVERSARIAL",
+   "name": "N-ADVERSARIAL",
+   "type": "ADVERSARIAL",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "6",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": false
+    },
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": false
+    },
+    {
+     "name": "portfolio_plan",
+     "type": "any",
+     "signal_field": "portfolio_plan",
+     "required": false
+    },
+    {
+     "name": "research_digest",
+     "type": "any",
+     "signal_field": "research_digest",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "challenge_list",
+     "type": "any",
+     "signal_field": "challenge_list",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-ADVERSARIAL.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null,
+   "ensemble": {
+    "mode": "quorum",
+    "jury_size": 3,
+    "k": 2,
+    "dissent_threshold": 0.34,
+    "cross_verify": {
+     "verifier_provider": "default"
+    },
+    "scout_tier": "model-small",
+    "fund_tier": "model-medium"
+   },
+   "downshiftable": true
+  },
+  "N-SYNTHESIS-AGG": {
+   "id": "N-SYNTHESIS-AGG",
+   "name": "N-SYNTHESIS-AGG",
+   "type": "AGGREGATION",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "7",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "budget_verdict",
+     "type": "any",
+     "signal_field": "budget_verdict",
+     "required": true
+    },
+    {
+     "name": "income_verdict",
+     "type": "any",
+     "signal_field": "income_verdict",
+     "required": true
+    },
+    {
+     "name": "challenge_list",
+     "type": "any",
+     "signal_field": "challenge_list",
+     "required": true
+    },
+    {
+     "name": "portfolio_plan",
+     "type": "any",
+     "signal_field": "portfolio_plan",
+     "required": false
+    },
+    {
+     "name": "benefit_safety",
+     "type": "any",
+     "signal_field": "benefit_safety",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "verified_advice",
+     "type": "any",
+     "signal_field": "verified_advice",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": "AND",
+   "aggregation_policy": null,
+   "module_file": "modules/N-SYNTHESIS-AGG.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-CHART-SPEC": {
+   "id": "N-CHART-SPEC",
+   "name": "N-CHART-SPEC",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": true
+    },
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": false
+    },
+    {
+     "name": "portfolio_plan",
+     "type": "any",
+     "signal_field": "portfolio_plan",
+     "required": false
+    },
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": false
+    },
+    {
+     "name": "verified_advice",
+     "type": "any",
+     "signal_field": "verified_advice",
+     "required": false
+    },
+    {
+     "name": "data_freshness_regime",
+     "type": "any",
+     "signal_field": "data_freshness_regime",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "chart_specs",
+     "type": "any",
+     "signal_field": "chart_specs",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-CHART-SPEC.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-DISCLAIMER": {
+   "id": "N-DISCLAIMER",
+   "name": "N-DISCLAIMER",
+   "type": "FORMATTER",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": true
+    },
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "compliance_wrap",
+     "type": "any",
+     "signal_field": "compliance_wrap",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-DISCLAIMER.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-REPORT": {
+   "id": "N-REPORT",
+   "name": "N-REPORT",
+   "type": "SYNTHESIS",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "9",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "verified_advice",
+     "type": "any",
+     "signal_field": "verified_advice",
+     "required": true
+    },
+    {
+     "name": "chart_specs",
+     "type": "any",
+     "signal_field": "chart_specs",
+     "required": true
+    },
+    {
+     "name": "compliance_wrap",
+     "type": "any",
+     "signal_field": "compliance_wrap",
+     "required": true
+    },
+    {
+     "name": "budget_plan",
+     "type": "any",
+     "signal_field": "budget_plan",
+     "required": false
+    },
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": false
+    },
+    {
+     "name": "portfolio_plan",
+     "type": "any",
+     "signal_field": "portfolio_plan",
+     "required": false
+    },
+    {
+     "name": "quote_data",
+     "type": "any",
+     "signal_field": "quote_data",
+     "required": false
+    },
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "report_frame",
+     "type": "any",
+     "signal_field": "report_frame",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "report_markdown",
+     "type": "any",
+     "signal_field": "report_markdown",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": "AND",
+   "aggregation_policy": null,
+   "module_file": "modules/N-REPORT.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-QUALITY-GATE": {
+   "id": "N-QUALITY-GATE",
+   "name": "N-QUALITY-GATE",
+   "type": "GATE",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "9",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "report_markdown",
+     "type": "any",
+     "signal_field": "report_markdown",
+     "required": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "quality_verdict",
+     "type": "any",
+     "signal_field": "quality_verdict",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-QUALITY-GATE.md",
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": null
+  },
+  "N-EMIT-MD": {
+   "id": "N-EMIT-MD",
+   "name": "N-EMIT-MD",
+   "type": "PERSISTER",
+   "tier": "no-llm",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "10",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "report_markdown",
+     "type": "any",
+     "signal_field": "report_markdown",
+     "required": true
+    },
+    {
+     "name": "report_out_path",
+     "type": "any",
+     "signal_field": "report_out_path",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "written_path",
+     "type": "any",
+     "signal_field": "written_path",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": null,
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": {
+    "tool": "fs.write_text",
+    "args": {
+     "path": "report_out_path",
+     "content": "report_markdown"
+    },
+    "outputs": {
+     "written_path": "written_path"
+    }
+   }
+  },
+  "N-EMIT-PDF": {
+   "id": "N-EMIT-PDF",
+   "name": "N-EMIT-PDF",
+   "type": "PERSISTER",
+   "tier": "no-llm",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "10",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "report_markdown",
+     "type": "any",
+     "signal_field": "report_markdown",
+     "required": true
+    },
+    {
+     "name": "pdf_out_path",
+     "type": "any",
+     "signal_field": "pdf_out_path",
+     "required": false
+    },
+    {
+     "name": "doc_type",
+     "type": "any",
+     "signal_field": "doc_type",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "pdf_path",
+     "type": "any",
+     "signal_field": "pdf_path",
+     "required": true
+    },
+    {
+     "name": "pdf_status",
+     "type": "any",
+     "signal_field": "pdf_status",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": null,
+   "scale_gates": {},
+   "rationale": "",
+   "tool_call": {
+    "tool": "pdf.render",
+    "args": {
+     "path": "pdf_out_path",
+     "markdown": "report_markdown",
+     "document_type": "doc_type"
+    },
+    "outputs": {
+     "pdf_path": "pdf_path",
+     "pdf_status": "status"
+    }
+   }
+  },
+  "N-REFUSE": {
+   "id": "N-REFUSE",
+   "name": "N-REFUSE",
+   "type": "SYNTHESIS",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "0",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "preflight_ok",
+     "type": "any",
+     "signal_field": "preflight_ok",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "refusal_message",
+     "type": "any",
+     "signal_field": "refusal_message",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-REFUSE.md",
+   "scale_gates": {},
+   "rationale": "early_exit terminal: refuse on no-context/insufficient",
+   "tool_call": null
+  },
+  "N-MACRO-FETCH": {
+   "id": "N-MACRO-FETCH",
+   "name": "N-MACRO-FETCH",
+   "type": "ANALYZER",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "2",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "parsed_context",
+     "type": "any",
+     "signal_field": "parsed_context",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "macro_context",
+     "type": "any",
+     "signal_field": "macro_context",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-MACRO-FETCH.md",
+   "scale_gates": {},
+   "rationale": "cited rates/inflation macro context (read-only, injection-hardened)",
+   "tool_call": {
+    "tool": "http.get_text",
+    "args": {},
+    "outputs": {
+     "macro_context": "value"
+    }
+   }
+  },
+  "N-STRATEGY-FANOUT": {
+   "id": "N-STRATEGY-FANOUT",
+   "name": "N-STRATEGY-FANOUT",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3.5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "situation_analysis",
+     "type": "any",
+     "signal_field": "situation_analysis",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "strategy_seed",
+     "type": "any",
+     "signal_field": "strategy_seed",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-STRATEGY-FANOUT.md",
+   "scale_gates": {},
+   "rationale": "parallel_merge source: budget/income/portfolio framings",
+   "tool_call": null
+  },
+  "N-STRAT-CAND-BUDGET": {
+   "id": "N-STRAT-CAND-BUDGET",
+   "name": "N-STRAT-CAND-BUDGET",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3.5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "strategy_seed",
+     "type": "any",
+     "signal_field": "strategy_seed",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "cand_budget",
+     "type": "any",
+     "signal_field": "cand_budget",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-STRAT-CAND-BUDGET.md",
+   "scale_gates": {},
+   "rationale": "budget-framing strategy candidate",
+   "tool_call": null
+  },
+  "N-STRAT-CAND-INCOME": {
+   "id": "N-STRAT-CAND-INCOME",
+   "name": "N-STRAT-CAND-INCOME",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3.5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "strategy_seed",
+     "type": "any",
+     "signal_field": "strategy_seed",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "cand_income",
+     "type": "any",
+     "signal_field": "cand_income",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-STRAT-CAND-INCOME.md",
+   "scale_gates": {},
+   "rationale": "income-framing strategy candidate",
+   "tool_call": null
+  },
+  "N-STRAT-CAND-PORTFOLIO": {
+   "id": "N-STRAT-CAND-PORTFOLIO",
+   "name": "N-STRAT-CAND-PORTFOLIO",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3.5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "strategy_seed",
+     "type": "any",
+     "signal_field": "strategy_seed",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "cand_portfolio",
+     "type": "any",
+     "signal_field": "cand_portfolio",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-STRAT-CAND-PORTFOLIO.md",
+   "scale_gates": {},
+   "rationale": "portfolio-framing strategy candidate",
+   "tool_call": null
+  },
+  "N-STRATEGY-MERGE": {
+   "id": "N-STRATEGY-MERGE",
+   "name": "N-STRATEGY-MERGE",
+   "type": "AGGREGATION",
+   "tier": "model-large",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "3.5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "cand_budget",
+     "type": "any",
+     "signal_field": "cand_budget",
+     "required": false
+    },
+    {
+     "name": "cand_income",
+     "type": "any",
+     "signal_field": "cand_income",
+     "required": false
+    },
+    {
+     "name": "cand_portfolio",
+     "type": "any",
+     "signal_field": "cand_portfolio",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "strategy_plan",
+     "type": "any",
+     "signal_field": "strategy_plan",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": "AND",
+   "aggregation_policy": "best_elements",
+   "module_file": "modules/N-STRATEGY-MERGE.md",
+   "scale_gates": {},
+   "rationale": "merge.best_elements of strategy candidates -> strategy_plan feeding engines",
+   "tool_call": null
+  },
+  "N-BENEFIT-SAFETY": {
+   "id": "N-BENEFIT-SAFETY",
+   "name": "N-BENEFIT-SAFETY",
+   "type": "GENERATOR",
+   "tier": "model-medium",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "5",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "benefit_dependency_flags",
+     "type": "any",
+     "signal_field": "benefit_dependency_flags",
+     "required": false
+    },
+    {
+     "name": "income_plan",
+     "type": "any",
+     "signal_field": "income_plan",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "benefit_safety",
+     "type": "any",
+     "signal_field": "benefit_safety",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-BENEFIT-SAFETY.md",
+   "scale_gates": {},
+   "rationale": "benefit cliffs/ABLE/consult; hard-gate silent-forfeit; cite+defer jurisdiction",
+   "tool_call": null
+  },
+  "N-FRAME-SELECT": {
+   "id": "N-FRAME-SELECT",
+   "name": "N-FRAME-SELECT",
+   "type": "GATE",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "frame_selected",
+     "type": "any",
+     "signal_field": "frame_selected",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-FRAME-SELECT.md",
+   "scale_gates": {},
+   "rationale": "quality_gate(bracket) -> report frame",
+   "tool_call": null
+  },
+  "N-FRAME-SURVIVAL": {
+   "id": "N-FRAME-SURVIVAL",
+   "name": "N-FRAME-SURVIVAL",
+   "type": "GENERATOR",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "frame_selected",
+     "type": "any",
+     "signal_field": "frame_selected",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "report_frame_survival",
+     "type": "any",
+     "signal_field": "report_frame_survival",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-FRAME-SURVIVAL.md",
+   "scale_gates": {},
+   "rationale": "survival / benefit-dependent report framing",
+   "tool_call": null
+  },
+  "N-FRAME-STANDARD": {
+   "id": "N-FRAME-STANDARD",
+   "name": "N-FRAME-STANDARD",
+   "type": "GENERATOR",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "frame_selected",
+     "type": "any",
+     "signal_field": "frame_selected",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "report_frame_standard",
+     "type": "any",
+     "signal_field": "report_frame_standard",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-FRAME-STANDARD.md",
+   "scale_gates": {},
+   "rationale": "standard (default) report framing",
+   "tool_call": null
+  },
+  "N-FRAME-HNW": {
+   "id": "N-FRAME-HNW",
+   "name": "N-FRAME-HNW",
+   "type": "GENERATOR",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "wealth_bracket",
+     "type": "any",
+     "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "frame_selected",
+     "type": "any",
+     "signal_field": "frame_selected",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "report_frame_hnw",
+     "type": "any",
+     "signal_field": "report_frame_hnw",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-FRAME-HNW.md",
+   "scale_gates": {},
+   "rationale": "high-net-worth report framing",
+   "tool_call": null
+  },
+  "N-FRAME-MERGE": {
+   "id": "N-FRAME-MERGE",
+   "name": "N-FRAME-MERGE",
+   "type": "AGGREGATION",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8",
+   "conditional": false,
+   "inputs": [
+    {
+     "name": "report_frame_survival",
+     "type": "any",
+     "signal_field": "report_frame_survival",
+     "required": false
+    },
+    {
+     "name": "report_frame_standard",
+     "type": "any",
+     "signal_field": "report_frame_standard",
+     "required": false
+    },
+    {
+     "name": "report_frame_hnw",
+     "type": "any",
+     "signal_field": "report_frame_hnw",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "report_frame",
+     "type": "any",
+     "signal_field": "report_frame",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": "OR",
+   "aggregation_policy": "first_present",
+   "module_file": "modules/N-FRAME-MERGE.md",
+   "scale_gates": {},
+   "rationale": "XOR/OR reconvergence: exactly one frame fires -> report_frame -> N-REPORT",
+   "tool_call": null
+  },
+  "N-HITL-APPROVE": {
+   "id": "N-HITL-APPROVE",
+   "name": "N-HITL-APPROVE",
+   "type": "GATE",
+   "tier": "model-small",
+   "exec_type": "inline",
+   "hat": "",
+   "wave": "8.5",
+   "conditional": true,
+   "inputs": [
+    {
+     "name": "report_markdown",
+     "type": "any",
+     "signal_field": "report_markdown",
+     "required": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "plan_approved",
+     "type": "any",
+     "signal_field": "plan_approved",
+     "required": true
+    },
+    {
+     "name": "rework_requested",
+     "type": "any",
+     "signal_field": "rework_requested",
+     "required": true
+    }
+   ],
+   "raises_signals": [],
+   "join_policy": null,
+   "aggregation_policy": null,
+   "module_file": "modules/N-HITL-APPROVE.md",
+   "scale_gates": {},
+   "rationale": "single plain-text plan-approval pause (exit-11); approve->emit, rework->report. plan_approved/rework_requested are PRODUCED here by the human decision (grounds the gates).",
+   "tool_call": null,
+   "hitl": true
+  }
+ },
+ "edges": [
+  {
+   "id": "E01",
+   "src": "N-PREFLIGHT",
+   "dst": "N-CONTEXT-INGEST",
+   "kind": "gate-open",
+   "signal_field": "preflight_ok"
+  },
+  {
+   "id": "E02",
+   "src": "N-CONTEXT-INGEST",
+   "dst": "N-CLASSIFY",
+   "kind": "required"
+  },
+  {
+   "id": "E03",
+   "src": "N-CLASSIFY",
+   "dst": "N-RESEARCH-ECO",
+   "kind": "required",
+   "split_from": "research"
+  },
+  {
+   "id": "E04",
+   "src": "N-CLASSIFY",
+   "dst": "N-RESEARCH-LOC",
+   "kind": "required",
+   "split_from": "research"
+  },
+  {
+   "id": "E05",
+   "src": "N-CLASSIFY",
+   "dst": "N-RESEARCH-MKT",
+   "kind": "required",
+   "split_from": "research"
+  },
+  {
+   "id": "E06",
+   "src": "N-CLASSIFY",
+   "dst": "N-QUOTE-FETCHER",
+   "kind": "required",
+   "split_from": "research"
+  },
+  {
+   "id": "E07",
+   "src": "N-RESEARCH-ECO",
+   "dst": "N-RESEARCH-AGG",
+   "kind": "required",
+   "and_join_group": "rslot"
+  },
+  {
+   "id": "E08",
+   "src": "N-RESEARCH-LOC",
+   "dst": "N-RESEARCH-AGG",
+   "kind": "required",
+   "and_join_group": "rslot"
+  },
+  {
+   "id": "E09",
+   "src": "N-RESEARCH-MKT",
+   "dst": "N-RESEARCH-AGG",
+   "kind": "required",
+   "and_join_group": "rslot"
+  },
+  {
+   "id": "E10",
+   "src": "N-QUOTE-FETCHER",
+   "dst": "N-RESEARCH-AGG",
+   "kind": "required",
+   "and_join_group": "rslot"
+  },
+  {
+   "id": "E11",
+   "src": "N-RESEARCH-AGG",
+   "dst": "N-SITUATION-ANALYZE",
+   "kind": "required"
+  },
+  {
+   "id": "E13",
+   "src": "N-BUDGET-ENGINE",
+   "dst": "N-INCOME-ENGINE",
+   "kind": "required"
+  },
+  {
+   "id": "E14",
+   "src": "N-INCOME-ENGINE",
+   "dst": "N-VERIFY-BUDGET",
+   "kind": "required",
+   "split_from": "synth"
+  },
+  {
+   "id": "E15",
+   "src": "N-INCOME-ENGINE",
+   "dst": "N-VERIFY-INCOME",
+   "kind": "required",
+   "split_from": "synth"
+  },
+  {
+   "id": "E16",
+   "src": "N-INCOME-ENGINE",
+   "dst": "N-ADVERSARIAL",
+   "kind": "required",
+   "split_from": "synth"
+  },
+  {
+   "id": "E17",
+   "src": "N-INCOME-ENGINE",
+   "dst": "N-PORTFOLIO-ENGINE",
+   "kind": "required",
+   "split_from": "synth"
+  },
+  {
+   "id": "E18",
+   "src": "N-VERIFY-BUDGET",
+   "dst": "N-SYNTHESIS-AGG",
+   "kind": "required",
+   "and_join_group": "sslot"
+  },
+  {
+   "id": "E19",
+   "src": "N-VERIFY-INCOME",
+   "dst": "N-SYNTHESIS-AGG",
+   "kind": "required",
+   "and_join_group": "sslot"
+  },
+  {
+   "id": "E20",
+   "src": "N-ADVERSARIAL",
+   "dst": "N-SYNTHESIS-AGG",
+   "kind": "required",
+   "and_join_group": "sslot"
+  },
+  {
+   "id": "E21",
+   "src": "N-PORTFOLIO-ENGINE",
+   "dst": "N-SYNTHESIS-AGG",
+   "kind": "required",
+   "and_join_group": "sslot"
+  },
+  {
+   "id": "E22",
+   "src": "N-SYNTHESIS-AGG",
+   "dst": "N-CHART-SPEC",
+   "kind": "required",
+   "split_from": "report"
+  },
+  {
+   "id": "E23",
+   "src": "N-SYNTHESIS-AGG",
+   "dst": "N-DISCLAIMER",
+   "kind": "required",
+   "split_from": "report"
+  },
+  {
+   "id": "E24",
+   "src": "N-CHART-SPEC",
+   "dst": "N-REPORT",
+   "kind": "required",
+   "and_join_group": "repslot"
+  },
+  {
+   "id": "E25",
+   "src": "N-DISCLAIMER",
+   "dst": "N-REPORT",
+   "kind": "required",
+   "and_join_group": "repslot"
+  },
+  {
+   "id": "E26",
+   "src": "N-REPORT",
+   "dst": "N-QUALITY-GATE",
+   "kind": "required"
+  },
+  {
+   "id": "E27",
+   "src": "N-QUALITY-GATE",
+   "dst": "N-REPORT",
+   "kind": "back-edge",
+   "gate_condition": "quality_verdict == 'FAIL'",
+   "retry_cap": 2
+  },
+  {
+   "id": "E28",
+   "src": "N-QUALITY-GATE",
+   "dst": "N-HITL-APPROVE",
+   "kind": "forward-conditional",
+   "gate_condition": "quality_verdict == 'PASS'"
+  },
+  {
+   "id": "E29",
+   "src": "N-EMIT-MD",
+   "dst": "N-EMIT-PDF",
+   "kind": "required"
+  },
+  {
+   "id": "E30",
+   "src": "N-CLASSIFY",
+   "dst": "N-MACRO-FETCH",
+   "kind": "required",
+   "split_from": "research"
+  },
+  {
+   "id": "E31",
+   "src": "N-MACRO-FETCH",
+   "dst": "N-RESEARCH-AGG",
+   "kind": "required",
+   "and_join_group": "rslot"
+  },
+  {
+   "id": "E32",
+   "src": "N-SITUATION-ANALYZE",
+   "dst": "N-STRATEGY-FANOUT",
+   "kind": "required"
+  },
+  {
+   "id": "E33",
+   "src": "N-STRATEGY-MERGE",
+   "dst": "N-BUDGET-ENGINE",
+   "kind": "required"
+  },
+  {
+   "id": "E34",
+   "src": "N-INCOME-ENGINE",
+   "dst": "N-BENEFIT-SAFETY",
+   "kind": "required",
+   "split_from": "synth"
+  },
+  {
+   "id": "E35",
+   "src": "N-BENEFIT-SAFETY",
+   "dst": "N-SYNTHESIS-AGG",
+   "kind": "required",
+   "and_join_group": "sslot"
+  },
+  {
+   "id": "E36",
+   "src": "N-SYNTHESIS-AGG",
+   "dst": "N-FRAME-SELECT",
+   "kind": "required"
+  },
+  {
+   "id": "E37",
+   "src": "N-FRAME-SURVIVAL",
+   "dst": "N-FRAME-MERGE",
+   "kind": "required",
+   "and_join_group": "fslot"
+  },
+  {
+   "id": "E38",
+   "src": "N-FRAME-STANDARD",
+   "dst": "N-FRAME-MERGE",
+   "kind": "required",
+   "and_join_group": "fslot"
+  },
+  {
+   "id": "E39",
+   "src": "N-FRAME-HNW",
+   "dst": "N-FRAME-MERGE",
+   "kind": "required",
+   "and_join_group": "fslot"
+  },
+  {
+   "id": "E40",
+   "src": "N-FRAME-MERGE",
+   "dst": "N-REPORT",
+   "kind": "required",
+   "and_join_group": "repslot"
+  },
+  {
+   "id": "E41",
+   "src": "N-HITL-APPROVE",
+   "dst": "N-EMIT-MD",
+   "kind": "gate-open",
+   "signal_field": "plan_approved"
+  },
+  {
+   "id": "E42",
+   "src": "N-HITL-APPROVE",
+   "dst": "N-REPORT",
+   "kind": "back-edge",
+   "gate_condition": "rework_requested == True",
+   "retry_cap": 2
+  }
+ ],
+ "metadata_v2": {
+  "built_from": "v1 2.0.0 additive",
+  "topology": "lean-hybrid",
+  "new_nodes": [
+   "N-REFUSE",
+   "N-MACRO-FETCH",
+   "N-STRATEGY-FANOUT",
+   "N-STRAT-CAND-BUDGET",
+   "N-STRAT-CAND-INCOME",
+   "N-STRAT-CAND-PORTFOLIO",
+   "N-STRATEGY-MERGE",
+   "N-BENEFIT-SAFETY",
+   "N-FRAME-SELECT",
+   "N-FRAME-SURVIVAL",
+   "N-FRAME-STANDARD",
+   "N-FRAME-HNW",
+   "N-FRAME-MERGE",
+   "N-HITL-APPROVE"
+  ]
+ }
+}

@@ -1,0 +1,28 @@
+{
+  "profile": {"wealth_bracket": "middle", "situation_class": "employed",
+              "location": "Austin, TX", "risk_tolerance": "moderate"},
+  "income_sources": [{"source_name": "salary", "amount_per_period": 5200, "frequency": "monthly", "is_active": 1}],
+  "expenses": [
+    {"category": "housing", "amount": 1800, "frequency": "monthly", "is_recurring": 1},
+    {"category": "food", "amount": 600, "frequency": "monthly", "is_recurring": 1},
+    {"category": "transport", "amount": 400, "frequency": "monthly", "is_recurring": 1},
+    {"category": "bills", "amount": 500, "frequency": "monthly", "is_recurring": 1}
+  ],
+  "assets": [{"asset_type": "cash", "description": "checking+savings", "estimated_value": 12000}],
+  "debts": [{"debt_type": "student_loan", "description": "undergrad", "balance": 18000,
+             "interest_rate": 0.055, "min_payment": 220}],
+  "portfolio_holdings": [
+    {"ticker": "VTI", "asset_class": "etf", "shares": 60, "cost_basis": 18000, "last_known_price": 360, "last_updated": "2026-05-01"},
+    {"ticker": "BND", "asset_class": "bond", "shares": 50, "cost_basis": 3700, "last_known_price": 72, "last_updated": "2026-05-01"}
+  ],
+  "transactions": [],
+  "goals": [
+    {"goal_name": "emergency_fund", "target_amount": 18000, "current_amount": 12000, "priority": 1},
+    {"goal_name": "buy_house", "target_amount": 60000, "current_amount": 5000, "target_date": "2031-01-01", "priority": 2}
+  ],
+  "investment_allocation_targets": [
+    {"vehicle": "index_funds", "target_pct": 0.7, "expected_annual_return": 0.10, "is_tax_advantaged": 1},
+    {"vehicle": "bonds", "target_pct": 0.2, "expected_annual_return": 0.04, "is_tax_advantaged": 1},
+    {"vehicle": "hysa", "target_pct": 0.1, "expected_annual_return": 0.04, "is_tax_advantaged": 0}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "profile": {"wealth_bracket": "destitute", "situation_class": "unemployed",
+              "location": null, "risk_tolerance": "conservative"},
+  "income_sources": [],
+  "expenses": [{"category": "food", "amount": 200, "frequency": "monthly", "is_recurring": 1}],
+  "assets": [],
+  "debts": [],
+  "portfolio_holdings": [],
+  "transactions": [],
+  "goals": [{"goal_name": "emergency_fund", "target_amount": 500, "current_amount": 0, "priority": 1}],
+  "investment_allocation_targets": []
+}

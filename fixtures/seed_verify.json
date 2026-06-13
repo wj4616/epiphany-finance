@@ -1,0 +1,16 @@
+{
+  "context_text": "I make $5200/month, rent is $1800, food $600. I have some index funds.",
+  "financial_state": {"profile": {"wealth_bracket": "middle"}},
+  "mode": "report",
+  "markdown_flag": true,
+  "pdf_flag": true,
+  "doc_type": "Financial Analysis Report",
+  "report_out_path": "report.md",
+  "pdf_out_path": "report.pdf",
+  "quote_data_seed": {
+    "quote_fetch_ts": "2026-06-03T15:47:30Z",
+    "prices": {"VTI": {"price": 372.45, "source_ts": "2026-06-03T20:00:00Z", "staleness_minutes": 2}},
+    "fetch_success": true,
+    "offline_flag": false
+  }
+}
