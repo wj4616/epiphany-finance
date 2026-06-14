@@ -69,18 +69,20 @@ def test_every_cli_flag_present():
 
 
 def test_optional_features_no_deadlock_via_fanout_regions():
-    """No-deadlock is realized by 3 split_from fan-out regions (harness-chained AND-joins) +
-    self-gating optional nodes — not gate-open/bypass edges. Verify detects all 3 regions and the
-    conditional branches are flagged conditional (they emit null when their flag is false)."""
+    """No-deadlock is realized by the split_from fan-out regions (harness-chained AND-joins). The
+    research/portfolio branches ALWAYS run (audit-2026-06-14 Q3: the prior `conditional: true` was
+    cosmetic — they were reached by *required* edges with no flag gate, and a real skip INSIDE an
+    AND-join would DEADLOCK). The 'optional' behaviour is SIGNAL-driven scope IN-NODE (emit an
+    empty / no-holdings digest when the flag is false), not topology — so the joins never dangle."""
     from goatcs_harness import parallel
     g = load(GRAPH)
     regions = parallel.detect_regions(g)
     joins = {r.join for r in regions}
     # v2 adds the strategy fan-out region (N-STRATEGY-MERGE) on top of the carried v1 three.
     assert joins == {"N-RESEARCH-AGG", "N-SYNTHESIS-AGG", "N-REPORT", "N-STRATEGY-MERGE"}
-    # the optional branches that must self-gate are present + marked conditional
+    # these branches must NOT be cosmetically conditional — they always run (no latent join deadlock)
     for n in ("N-RESEARCH-LOC", "N-RESEARCH-MKT", "N-QUOTE-FETCHER", "N-PORTFOLIO-ENGINE"):
-        assert g.nodes[n].conditional, f"{n} must be conditional (self-gating)"
+        assert not g.nodes[n].conditional, f"{n} must always run (signal-driven scope, not topology)"
     # every fan-out branch reconverges on its AND-join (no orphan branch -> no deadlock)
     for r in regions:
         assert g.nodes[r.join].join_policy == "AND"

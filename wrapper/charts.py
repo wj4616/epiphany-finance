@@ -92,7 +92,7 @@ def render_specs(chart_specs, out_dir: str, quote_data: dict | None = None) -> d
         path = spec.get("path") or os.path.join(out_dir, f"chart_{i}.png")
         res = render_chart(spec, Path(path))
         if res["status"] == "ok":
-            rendered.append({"title": spec["title"], "path": res["image_path"]})
+            rendered.append({"title": spec.get("title", title), "path": res["image_path"]})
         else:
             skipped.append({"title": title, "reason": res.get("generation_note", "render error")})
     return {"rendered": rendered, "skipped": skipped}

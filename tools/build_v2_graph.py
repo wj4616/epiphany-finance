@@ -157,12 +157,22 @@ def build_v2_base(v1: dict) -> dict:
     by_id["E23"]["src"] = "N-FRAME-MERGE"
     # N-FRAME-SELECT's case/default edges -> frames come from the quality_gate lowering.
 
-    # (8.5) HITL plan-approval: PASS now routes to HITL, then approve->emit / rework->report(back-edge)
-    e28 = by_id["E28"]               # N-QUALITY-GATE -> N-EMIT-MD (PASS)
+    # (8.5) HITL plan-approval + DEGRADE-AND-SHIP fallthroughs (audit topology F1/F5: a FAIL past the
+    # retry cap, or a HITL "neither flag" / rework past its cap, previously route-HALTED at exit 6
+    # instead of shipping the last-good report).
+    #   N-QUALITY-GATE: E27 (FAIL→REPORT back-edge, cap2) still retries; E28 becomes the UNCONDITIONAL
+    #   proceed-to-HITL edge, so PASS *and* cap-exhausted-FAIL both ship to HITL (never dangle).
+    e28 = by_id["E28"]               # was N-QUALITY-GATE -> N-EMIT-MD (PASS-only)
     e28["dst"] = "N-HITL-APPROVE"
+    e28["kind"] = "required"
+    e28.pop("gate_condition", None)
+    e28.pop("signal_field", None)
     edges.append(_e("E41", "N-HITL-APPROVE", "N-EMIT-MD", kind="gate-open", sig="plan_approved"))
     edges.append(_e("E42", "N-HITL-APPROVE", "N-REPORT", kind="back-edge",
                     cond="rework_requested == True", cap=2))
+    #   N-HITL-APPROVE: E43 is the unconditional ship default — approve fires E41, rework(≤cap) fires
+    #   E42, and ANYTHING else (no decision, or rework past cap) falls through E43 to emit the report.
+    edges.append(_e("E43", "N-HITL-APPROVE", "N-EMIT-MD"))
 
     # ---- signal consumption wiring (clear dead-signals: every new output is read downstream) ----
     def _add_input(nid, sig):
@@ -175,6 +185,7 @@ def build_v2_base(v1: dict) -> dict:
     _add_input("N-SITUATION-ANALYZE", "macro_context")      # macro grounds the projections
     _add_input("N-SYNTHESIS-AGG", "benefit_safety")         # benefit-safety joins synthesis
     _add_input("N-REPORT", "report_frame")                  # bracket frame shapes the report
+    _add_input("N-REPORT", "challenge_list")                # dissent → UNCERTAIN appendix (audit B2)
     for fr in ("N-FRAME-SURVIVAL", "N-FRAME-STANDARD", "N-FRAME-HNW"):
         _add_input(fr, "frame_selected")                    # frames read the gate's selection
     _add_input("N-HITL-APPROVE", "report_markdown")         # HITL reviews the drafted report
@@ -208,6 +219,20 @@ def build_v2_base(v1: dict) -> dict:
                        "_v2_real_quote": True}
     qn["output_schema"] = {"quote_data": {"type": "dict", "required": True}}
     qn["module_file"] = "modules/N-QUOTE-FETCHER.md"
+
+    # Audit topology F2: N-EMIT-MD wrote the DURABLE report (report_out_path) via `fs.write_text`,
+    # whose capability guard forces writes under the ephemeral scratch dir → the node HALTED with
+    # "write-outside-scratch" on the headless path. Rebind to the durable fs-output text writer
+    # `fs.write_output` (the text counterpart of pdf.render, newly added to the harness registry).
+    nodes["N-EMIT-MD"]["tool_call"]["tool"] = "fs.write_output"
+
+    # Audit topology F3: these nodes carried `conditional: true` but are reached by *required* edges
+    # with no flag gate, so they ALWAYS run — the skip was cosmetic and the flag misleading (and a
+    # latent AND-join deadlock if a skip were ever honored). Operator decision Q3: drop the pretense
+    # (they keep always-running; the module docs are corrected to match). The real has_investment /
+    # location skips remain SIGNAL-driven (consumed in-node), not topology.
+    for nid in ("N-RESEARCH-LOC", "N-RESEARCH-MKT", "N-QUOTE-FETCHER", "N-PORTFOLIO-ENGINE"):
+        nodes[nid]["conditional"] = False
 
     # S13: N-ADVERSARIAL becomes the ensemble verification stage (quorum over monetary figures).
     # NICE default fixture (v2.1): J=3, k=2, T=0.34; downshiftable (node flag) for the $0 hot path.

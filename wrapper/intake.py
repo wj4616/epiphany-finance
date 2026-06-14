@@ -7,19 +7,26 @@ from __future__ import annotations
 
 import re
 
-_NUM = re.compile(r"\$?\s*([\d,]+(?:\.\d+)?)\s*(k|m)?", re.I)
+_NUM = re.compile(
+    r"(?P<sign>[-−])?\s*\$?\s*(?P<num>[\d,]+(?:\.\d+)?)\s*"
+    r"(?P<suf>k|m|thousand|million|grand|bn|billion)?", re.I)
+_MAG = {"k": 1_000, "thousand": 1_000, "grand": 1_000, "m": 1_000_000, "million": 1_000_000,
+        "bn": 1_000_000_000, "billion": 1_000_000_000}
 
 
 def extract_amount(text: str) -> float | None:
-    """Pull the first dollar-ish amount from free text. '4k' -> 4000, '1,500' -> 1500."""
+    """Pull the first dollar-ish amount from free text. '4k'/'4 thousand' -> 4000, '1,500' -> 1500,
+    '-200' -> -200 (a withdrawal keeps its sign — it is not silently flipped positive)."""
     if not text:
         return None
     m = _NUM.search(text)
     if not m:
         return None
-    val = float(m.group(1).replace(",", ""))
-    suf = (m.group(2) or "").lower()
-    return val * {"k": 1_000, "m": 1_000_000}.get(suf, 1)
+    val = float(m.group("num").replace(",", ""))
+    val *= _MAG.get((m.group("suf") or "").lower(), 1)
+    if m.group("sign"):
+        val = -val
+    return val
 
 
 def parse_holdings(text: str) -> list[dict]:

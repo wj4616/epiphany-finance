@@ -57,6 +57,108 @@ def build_seed(fstate: dict, quote_data: dict, *, mode: str, markdown: bool, pdf
     }
 
 
+def _fmt_shares(s) -> str:
+    """Grouped share count — never scientific notation (audit: `{:g}` printed `1e+06`)."""
+    try:
+        v = float(s)
+    except (TypeError, ValueError):
+        return str(s)
+    return f"{int(v):,}" if v == int(v) else f"{v:,.4f}".rstrip("0").rstrip(".")
+
+
+def _money(x) -> str:
+    """`$1,234.56` or `n/a` — thousands-grouped (printf `%` has no comma flag, hence a helper)."""
+    return f"${x:,.2f}" if isinstance(x, (int, float)) else "n/a"
+
+
+_BENEFIT_HINTS = ("ssi", "ssdi", "disability", "medicaid", "snap", "social security",
+                  "supplemental security", "tanf", "section 8", "housing assistance")
+
+
+def is_benefit_dependent(result_state: dict | None, fstate: dict | None) -> bool:
+    """Robust, deterministic detection so the benefit-safety surfacing never depends on an LLM:
+    the classifier flag, the dependency-flags dict, OR a means-tested income source by name."""
+    rs = result_state or {}
+    if rs.get("benefit_dependent"):
+        return True
+    flags = rs.get("benefit_dependency_flags") or {}
+    if isinstance(flags, dict) and any(flags.get(k) for k in ("ssi", "ssdi", "medicaid", "snap")):
+        return True
+    for src in (fstate or {}).get("income_sources") or []:
+        name = str(src.get("source_name") or "").lower()
+        if any(h in name for h in _BENEFIT_HINTS):
+            return True
+    return False
+
+
+_BENEFIT_SAFETY_BLOCK = (
+    "## ⚠️ Benefit Safety (read this first)\n\n"
+    "You depend on means-tested benefits, so protecting your eligibility comes BEFORE any "
+    "saving or investing idea in this report:\n\n"
+    "- **Asset limits:** SSI and Medicaid have low countable-resource limits, so simply saving more "
+    "cash can reduce or suspend your benefits. Do not move money into savings/investments without "
+    "checking the limit first.\n"
+    "- **ABLE account:** if you became disabled before age 26, an ABLE account lets you save beyond "
+    "those limits without losing eligibility — ask a benefits counselor whether you qualify.\n"
+    "- **Earning more:** income limits and work incentives (e.g. SSDI's Trial Work Period) apply; "
+    "report income changes to the SSA so a raise doesn't accidentally end a benefit.\n"
+    "- **Verify first:** exact dollar thresholds vary by state and year. Confirm with the Social "
+    "Security Administration (SSA), your state Medicaid/benefits office, or a FREE benefits "
+    "counselor BEFORE moving money, saving more, or taking on work.\n")
+
+
+def _benefit_safety_md(result_state: dict | None) -> str:
+    """Deterministic benefit-safety section, optionally enriched with the graph's own
+    `benefit_safety` notes when present (handles dict OR str output shapes)."""
+    block = _BENEFIT_SAFETY_BLOCK
+    bs = (result_state or {}).get("benefit_safety")
+    extra = ""
+    if isinstance(bs, str) and bs.strip():
+        extra = bs.strip()
+    elif isinstance(bs, dict):
+        for k in ("note", "consult_note", "summary", "detail"):
+            if isinstance(bs.get(k), str) and bs[k].strip():
+                extra = bs[k].strip()
+                break
+    if extra and extra not in block:
+        block += f"\n{extra}\n"
+    return block
+
+
+def _uncertain_appendix_md(result_state: dict | None) -> str:
+    """Render an UNCERTAIN appendix from the ensemble's `challenge_list` so a disputed figure is
+    SURFACED, never silently scrubbed (audit B2 — the appendix was a dead pipe). Tolerant of the
+    LLM output shape (list of dicts or strings)."""
+    cl = (result_state or {}).get("challenge_list")
+    if not isinstance(cl, list) or not cl:
+        return ""
+    lines = ["## Appendix: Uncertain Figures", "",
+             "The following figures could not be independently verified to quorum and should be "
+             "treated as UNCERTAIN — verify them before relying on them:", ""]
+    for item in cl:
+        if isinstance(item, dict):
+            fig = item.get("figure") or item.get("claim") or item.get("item") or ""
+            why = item.get("issue") or item.get("reason") or item.get("note") or item.get("verdict") or ""
+            lines.append(f"- {fig}{(' — ' + str(why)) if why else ''}".strip())
+        elif str(item).strip():
+            lines.append(f"- {str(item).strip()}")
+    return "\n".join(lines) + "\n"
+
+
+def _extract_summary(md: str) -> str:
+    """Pull the plain-language 'What this means for you' section for the approval preview."""
+    lines = (md or "").splitlines()
+    for i, ln in enumerate(lines):
+        if "what this means" in ln.lower() and ln.lstrip().startswith("#"):
+            out = []
+            for nxt in lines[i + 1:]:
+                if nxt.lstrip().startswith("#") and out:
+                    break
+                out.append(nxt)
+            return ("\n".join(out)).strip()[:700]
+    return ""
+
+
 # ---------------------------------------------------------------- finalize (shared)
 def read_session_state(session_dir: str) -> dict:
     """Reconstruct the final graph state by merging every ACCEPTED node submission from the ledger
@@ -106,46 +208,99 @@ def finalize(result_state: dict, *, out_dir: str, quote_data: dict, bracket: str
     report_md = result_state.get("report_markdown") or ""
     chart_specs = result_state.get("chart_specs") or []
 
+    try:
+        from . import finance as _fin
+    except ImportError:                                 # pragma: no cover — script-mode fallback
+        import finance as _fin                            # type: ignore
+
     # Defense-in-depth: the wrapper GUARANTEES the mandatory compliance elements regardless of what
     # the LLM node produced — verbatim disclaimer (fix C / V-FIN-01), a timestamped holdings table
-    # (Q2 / V-FIN-21/22), and the Data Freshness section (Q19/20).
+    # (Q2 / V-FIN-21/22), the Data Freshness section (Q19/20), a DETERMINISTIC "Your Numbers" block
+    # (Q2 audit-2026-06-14 — figures computed, not LLM-guessed), and a benefit-safety block.
+    bd = is_benefit_dependent(result_state, fstate)
+
+    # Deterministic "Your Numbers" — monthly income/expenses/surplus (every cadence normalized) +,
+    # if there's a surplus, a clearly-(estimated) compound projection. These replace the figures the
+    # LLM previously produced unverified.
+    nums = _fin.monthly_numbers(fstate or {})
+    if (nums["monthly_income"] or nums["monthly_expenses"]) and "## Your Numbers" not in report_md:
+        s = nums["monthly_surplus"]
+        cat = "".join(f"  - {c}: ${v:,.2f}/mo\n" for c, v in nums["expenses_by_category"].items())
+        nb = ("\n## Your Numbers (calculated)\n\n"
+              f"- **Monthly income:** ${nums['monthly_income']:,.2f}\n"
+              f"- **Monthly expenses:** ${nums['monthly_expenses']:,.2f}\n" + (cat or "") +
+              f"- **Monthly {'surplus' if s >= 0 else 'shortfall'}:** ${abs(s):,.2f}"
+              f"{'' if s >= 0 else ' — expenses exceed income; the plan below focuses on closing this gap'}\n")
+        if s > 0 and bd:
+            # Benefit-dependent + surplus: do NOT show a rosy "invest it" projection that implicitly
+            # encourages moving money past a means-tested asset limit. Point to the benefit-safe path.
+            nb += (f"\nYou have about **${s:,.2f}/month** left over. Because you rely on means-tested "
+                   "benefits, do **not** simply move it into savings or investments — that can push "
+                   "you over an asset limit and reduce or end your benefits. See **Benefit Safety** "
+                   "below for how to keep it safely (for example, an ABLE account).\n")
+        elif s > 0:
+            nb += ("\nIf you invested that surplus at an **(estimated)** 10%/yr index return "
+                   "(7% after ~3% inflation), it could grow to:\n\n"
+                   "| Years | Nominal | After inflation (real) |\n|---|---|---|\n")
+            for r in _fin.projection_from_surplus(s):
+                nb += f"| {r['years']} | ${r['nominal']:,.2f} | ${r['real']:,.2f} |\n"
+            nb += "\nProjections are estimates, not guarantees — see the disclaimer.\n"
+        report_md += nb
+
     holdings = (fstate or {}).get("portfolio_holdings") or []
     if holdings and quote_data and quote_data.get("prices"):
-        from . import finance as _fin
         val = _fin.portfolio_valuation(holdings, quote_data["prices"])
-        rows = [f"| {h['ticker']} | {h['shares']:g} | "
-                f"{('$%.2f' % h['price']) if h['price'] is not None else 'n/a'} | "
-                f"{('$%.2f' % h['current_value']) if h['current_value'] is not None else 'n/a'} | "
-                f"{('$%.2f' % h['gain_loss']) if h['gain_loss'] is not None else 'n/a'} | "
-                f"{h.get('source_ts') or 'n/a'} |" for h in val["holdings"]]
+        rows = [f"| {h['ticker']} | {_fmt_shares(h['shares'])} | {_money(h['price'])} | "
+                f"{_money(h['current_value'])} | {_money(h['gain_loss'])} | "
+                f"{(h.get('source_ts') or 'unavailable')}"
+                f"{' (cached)' if h.get('used_fallback') else ''} |" for h in val["holdings"]]
+        notes = []
+        if val.get("fallback_count"):
+            notes.append(f"{val['fallback_count']} price(s) are cached/last-known, not live")
+        if val.get("excluded_count"):
+            notes.append(f"{val['excluded_count']} holding(s) are EXCLUDED from the totals — no "
+                         "price available")
+        caveat = (" " + "; ".join(notes) + ".") if notes else ""
         table = ("\n## Current Holdings (live valuation)\n\n"
                  "| Ticker | Shares | Price | Current Value | Gain/Loss | Market data (exact) |\n"
                  "|---|---|---|---|---|---|\n" + "\n".join(rows) +
                  f"\n\n**Total value: ${val['total_value']:,.2f}** "
-                 f"(cost ${val['total_cost']:,.2f}; gain/loss ${val['total_gain']:,.2f}). "
+                 f"(cost ${val['total_cost']:,.2f}; gain/loss ${val['total_gain']:,.2f}).{caveat} "
                  "Prices may be delayed — see Data Freshness.\n")
         if "Current Holdings (live valuation)" not in report_md:
             report_md += table
 
+    # Benefit-safety: GUARANTEE the cliff/ABLE/consult block reaches a benefit-dependent user's
+    # report (it was previously LLM-discretionary and could silently vanish — audit benefit#1).
+    if bd and "Benefit Safety" not in report_md:
+        report_md += "\n" + _benefit_safety_md(result_state)
+
+    # UNCERTAIN appendix: surface any ensemble dissent deterministically (audit B2 — was a dead pipe).
+    if "Appendix: Uncertain Figures" not in report_md:
+        appendix = _uncertain_appendix_md(result_state)
+        if appendix:
+            report_md += "\n" + appendix
+
     if "## Data Freshness" not in report_md:
         report_md += "\n" + quote.data_freshness_section(quote_data)
 
-    disc = disclaimer_for(bracket)
+    disc = disclaimer_for(bracket, benefit_dependent=bd)
     if not report_md.startswith(disc):
         report_md = f"{disc}\n\n{report_md}"
     if not report_md.rstrip().endswith(disc.rstrip()):
         report_md = f"{report_md}\n\n{disc}\n"
 
-    # S17 defense-in-depth: a single deterministic compliance assertion over the finalized report
-    # (verbatim disclaimer present top+bottom). This is the live-path use of wrapper.checks; it is a
-    # LOG-ONLY guard, NOT a routing or quality-RETRY authority (E27 owns retry — no re-drive here).
+    # S17 defense-in-depth: run the FULL deterministic compliance battery over the finalized report
+    # and warn loudly on every failure (audit Q1 — was disclaimer-only, so glossary/plain-summary/
+    # no-stock-pick had no live backstop under the inline-collapsing LLM gate). LOG-ONLY: the report
+    # still ships (operator chose warn-loud-still-ship); E27 owns any in-graph retry.
     try:
         from . import checks as _checks
     except ImportError:                                 # pragma: no cover — script-mode fallback
         import checks as _checks                         # type: ignore
-    _disc_ok, _disc_msg = _checks.disclaimer_top_and_bottom(report_md)
-    if not _disc_ok:
-        out(f"    ⚠ compliance: disclaimer — {_disc_msg}")
+    for _name, _ok, _msg in _checks.run_report_checks(report_md, quote_data):
+        if not _ok:
+            out(f"    ⚠ compliance: {_name} — {_msg}")
 
     out("  • Rendering charts…")
     render_result = charts.render_specs(chart_specs, os.path.join(out_dir, f"{basename}-charts"),
@@ -221,6 +376,31 @@ def _do_reset(args) -> int:
     return 0
 
 
+_PRIVACY_NOTE = ("I save everything locally and UNENCRYPTED (your details, reports, and run "
+                 "history) here — it stays even if you clear the chat, and nothing is sent online "
+                 "except live price lookups:\n  {dir}\n")
+
+
+def _approval_gate(state: dict | None, *, yes: bool, out=print, inp=input) -> bool:
+    """One-time plain-text plan approval before the report is written (Q4). Interactive only — a
+    non-tty / --yes / scripted run auto-approves, so headless drives and tests are unaffected."""
+    if yes or not sys.stdin.isatty():
+        return True
+    summary = _extract_summary((state or {}).get("report_markdown") or "")
+    out("\n— Your plan is ready for your approval —")
+    if summary:
+        out(summary)
+    try:
+        resp = inp("\nSave this report? Type 'yes' to save, or tell me what to change: ").strip().lower()
+    except EOFError:
+        return True
+    if resp in ("y", "yes", "ok", "okay", ""):
+        return True
+    out("Okay — not saved. Re-run when ready (e.g. `epiphany-finance --update \"<your change>\"`, "
+        "or `epiphany-finance --mode intake` to adjust your details).")
+    return False
+
+
 # ---------------------------------------------------------------- main
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="epiphany-finance",
@@ -274,8 +454,7 @@ def main(argv=None) -> int:
             slug = workspace.slugify(args.user or (fstate.get("profile") or {}).get("name"))
             slug = workspace.ensure_user(slug, name=(fstate.get("profile") or {}).get("name"))
             dbp = workspace.db_path(slug)
-            print(f"\nI'll save everything locally (unencrypted) here — it stays even if you clear "
-                  f"the chat session:\n  {workspace.user_dir(slug)}\n")
+            print("\n" + _PRIVACY_NOTE.format(dir=workspace.user_dir(slug)))
             with FinanceState(dbp) as db:
                 db.import_state(fstate)
                 if args.mode == "intake":
@@ -297,7 +476,8 @@ def main(argv=None) -> int:
                     slug = workspace.ensure_user(slug, name=fstate["profile"]["name"])
                 db.import_state(fstate)
                 if args.mode == "intake":
-                    print(f"\n✓ Saved to {workspace.user_dir(slug)}")
+                    print("\n" + _PRIVACY_NOTE.format(dir=workspace.user_dir(slug)))
+                    print(f"✓ Saved to {workspace.user_dir(slug)}")
                     return 0
 
             bracket = (db.export().get("profile") or {}).get("wealth_bracket")
@@ -308,6 +488,8 @@ def main(argv=None) -> int:
             if args.finalize:
                 qd = quote.fetch_quotes(db.tickers(), db)
                 state = read_session_state(args.finalize)
+                if not _approval_gate(state, yes=args.yes):
+                    return 0
                 outs = finalize(state, out_dir=out_dir, quote_data=qd, bracket=bracket,
                                 fstate=db.export(), db=db, markdown=markdown, pdf_flag=pdf_flag,
                                 basename=basename)
@@ -341,6 +523,8 @@ def main(argv=None) -> int:
             state = getattr(result, "state", None) or read_session_state(
                 os.path.join(session_dir, "run"))
             qd = seed["quote_data_seed"]
+            if not _approval_gate(state, yes=args.yes):
+                return 0
             outs = finalize(state, out_dir=out_dir, quote_data=qd, bracket=bracket,
                             fstate=db.export(), db=db, markdown=markdown, pdf_flag=pdf_flag,
                             basename=basename)

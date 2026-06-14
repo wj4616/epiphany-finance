@@ -12,8 +12,16 @@ offline (no network needed in CI).
 """
 from __future__ import annotations
 
+import math
 from datetime import datetime, timezone
 from typing import Callable
+
+
+def _is_real_price(p) -> bool:
+    """A usable quote: finite and strictly positive. A NaN/inf/0/negative return from yfinance is
+    BAD DATA, not a real $0 — treat it as a fetch failure so the offline/cached path engages
+    instead of letting `$nan` propagate into every figure (audit: NaN price)."""
+    return isinstance(p, (int, float)) and not isinstance(p, bool) and math.isfinite(p) and p > 0
 
 QUOTE_TTL = 300          # seconds: refresh if cached quote is older than this (also the 60s floor)
 STALE_SECONDS = 24 * 3600
@@ -99,6 +107,8 @@ def fetch_quotes(tickers, state, *, now: datetime | None = None,
         else:
             try:
                 price, source_ts = fetcher(ticker)
+                if not _is_real_price(price):           # NaN/inf/0/negative -> bad data, not a quote
+                    raise ValueError(f"invalid price {price!r}")
                 fetch_ts = _iso(now)
                 from_cache = False
                 if state is not None:
@@ -114,7 +124,7 @@ def fetch_quotes(tickers, state, *, now: datetime | None = None,
                         f"using the last saved price from {fetch_ts}. Please verify before acting.")
                 else:
                     prices[ticker] = {"price": None, "source_ts": None, "fetch_ts": _iso(now),
-                                      "staleness_minutes": None, "stale": True, "from_cache": False,
+                                      "staleness_minutes": None, "stale": False, "from_cache": False,
                                       "unavailable": True}
                     warnings.append(f"OFFLINE: no price available for {ticker} (no cached value).")
                     continue

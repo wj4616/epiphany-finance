@@ -36,7 +36,24 @@ BRACKET_ADDITIONS = {
 }
 
 
-def disclaimer_for(bracket: str | None) -> str:
-    """Base disclaimer + any bracket-specific addition (verbatim)."""
+# Mandatory addition for benefit-dependent users (SSI/SSDI/Medicaid/SNAP) — names the RIGHT
+# authorities (SSA / benefits counselor), which the generic CFP/CPA list does not. Appended, never
+# replacing the base. Keyed on the benefit_dependent flag, not the bracket.
+BENEFIT_ADDITION = (
+    "Benefit rules (SSI, SSDI, Medicaid, SNAP) vary by state and year and carry income and asset "
+    "limits — saving or earning more can REDUCE or END benefits. Before changing your income, "
+    "savings, or assets, verify with the Social Security Administration (SSA), your state Medicaid/"
+    "benefits office, or a benefits counselor, and ask about an ABLE account.")
+
+
+def disclaimer_for(bracket: str | None, benefit_dependent: bool = False) -> str:
+    """Base disclaimer + any bracket-specific addition + the benefit-safety addition when the user
+    depends on means-tested benefits (verbatim). BASE_DISCLAIMER stays an exact substring so the
+    top+bottom verbatim check still holds."""
+    out = BASE_DISCLAIMER
     add = BRACKET_ADDITIONS.get((bracket or "").strip().lower())
-    return BASE_DISCLAIMER + (f"\n\n*{add}*" if add else "")
+    if add:
+        out += f"\n\n*{add}*"
+    if benefit_dependent:
+        out += f"\n\n*{BENEFIT_ADDITION}*"
+    return out

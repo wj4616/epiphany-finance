@@ -13,14 +13,29 @@ ISO = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"
 PRICE = re.compile(r"\$\s?\d[\d,]*\.\d{2}")
 # Imperative security-selection language off quote data (Q5/DC-07). Broad ETFs are allowed.
 _ALLOWED_TICKERS = {"VTI", "VXUS", "BND", "VOO", "VT", "VTV", "SCHB", "ITOT", "AGG", "VNQ"}
-_STOCK_PICK = re.compile(r"\b(buy|sell|short|overweight|underweight|pick|dump)\b[^.\n]{0,40}\b([A-Z]{1,5})\b")
+# Common ALL-CAPS words/acronyms that look like tickers but aren't — so "sell your CAR", "CASH vs
+# DEBT", "RENT versus OWN" don't false-positive (the LLM gate is the primary screen; this is a net).
+_NOT_TICKERS = {
+    "CASH", "DEBT", "CAR", "RENT", "OWN", "BUY", "SELL", "HYSA", "ETF", "ETFS", "ABLE", "SSI",
+    "SSDI", "SNAP", "SSA", "IRA", "ROTH", "HSA", "CD", "CDS", "APR", "APY", "FDIC", "AI", "PDF",
+    "ID", "OK", "DIY", "TBD", "FAQ", "CFP", "CPA", "LLC", "EU", "UK", "USA", "US", "VS", "AND",
+    "OR", "THE", "YOU", "NOW", "ALL", "ANY", "REIT", "ESG", "TIPS", "HOUSE", "HOME", "FOOD",
+    "BILLS", "LOAN", "AUTO", "GAS", "PAY", "JOB",
+}
+# Verb match is case-insensitive (catches sentence-initial "Dump GME"); the TICKER stays UPPERCASE
+# (a scoped (?i:) flag on the verb only) so case-insensitivity doesn't itself add false positives.
+_STOCK_PICK = re.compile(
+    r"\b(?i:buy|sell|short|overweight|underweight|pick|dump|load up on|go long|go short)\b"
+    r"[^.\n]{0,40}?\b([A-Z]{2,5})\b")
 _VS = re.compile(r"\b([A-Z]{2,5})\b\s*(?:vs\.?|versus|over|instead of)\s*\b([A-Z]{2,5})\b")
 
 
 def disclaimer_top_and_bottom(md: str) -> tuple[bool, str]:
     d = BASE_DISCLAIMER.strip()
-    head = md[:1500]
-    tail = md[-1500:]
+    # window must fit BASE (~1081) + up to TWO appended additions (bracket + benefit, ~500) at the
+    # bottom, or the base overflows the window and a present disclaimer reads as missing.
+    head = md[:2400]
+    tail = md[-2400:]
     ok = d in head and d in tail
     return ok, "verbatim disclaimer present at top and bottom" if ok else "disclaimer missing/altered at top or bottom"
 
@@ -58,11 +73,13 @@ def no_individual_stock_picks(md: str) -> tuple[bool, str]:
     """Q5/DC-07/V-FIN-24: no imperative buy/sell of a specific (non-broad-ETF) ticker, and no
     stock-vs-stock comparison."""
     for m in _STOCK_PICK.finditer(md):
-        tick = m.group(2)
-        if tick not in _ALLOWED_TICKERS and tick.isupper() and len(tick) >= 2:
+        tick = m.group(1)
+        if tick not in _ALLOWED_TICKERS and tick not in _NOT_TICKERS and tick.isupper() and len(tick) >= 2:
             return False, f"specific security-selection language: '{m.group(0).strip()}'"
-    vs = _VS.search(md)
-    if vs and not ({vs.group(1), vs.group(2)} <= _ALLOWED_TICKERS):
+    for vs in _VS.finditer(md):
+        pair = {vs.group(1), vs.group(2)}
+        if pair <= _ALLOWED_TICKERS or pair & _NOT_TICKERS:
+            continue
         return False, f"stock-vs-stock comparison: '{vs.group(0).strip()}'"
     return True, "no individual stock picks / comparisons"
 

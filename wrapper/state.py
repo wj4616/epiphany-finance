@@ -72,6 +72,13 @@ class FinanceState:
             os.makedirs(d, exist_ok=True)
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
+        # WAL + a real busy timeout so overlapping runs queue instead of raising "database is
+        # locked" (the module docstring's atomicity claim was previously unbacked).
+        try:
+            self.conn.execute("PRAGMA journal_mode=WAL")
+            self.conn.execute("PRAGMA busy_timeout=5000")
+        except sqlite3.DatabaseError:
+            pass
         self.conn.executescript(SCHEMA)
         self.conn.commit()
 

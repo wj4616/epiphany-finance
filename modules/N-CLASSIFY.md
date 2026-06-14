@@ -25,5 +25,7 @@ Additionally emit:
   N-FRAME-SELECT survival gate reads (a gate cannot deref the flags object as `…ssi == true` without
   mistyping the whole object as bool). True ⇒ the survival report frame even when the bracket is not
   itself a low one.
-- `data_freshness_regime` seed — `FRESH|CACHED|STALE|OFFLINE` plumbing carried forward and consumed
-  by N-CHART-SPEC to skip price charts on STALE/OFFLINE (signal-driven, not a routing edge).
+- `data_freshness_regime` seed — `FRESH|CACHED|STALE|OFFLINE`, an ADVISORY label carried to
+  N-CHART-SPEC. NOTE: the actual price-chart skip is driven by the live `quote_data` freshness flags
+  (`offline_flag` / per-price `stale`) in `wrapper/charts.py`, NOT by this label — it is context for
+  the chart node's narration, not the skip authority (signal-driven, not a routing edge).

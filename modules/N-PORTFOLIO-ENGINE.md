@@ -4,7 +4,9 @@ tier: model-large
 ---
 ## Role
 Value the user's holdings with LIVE prices and suggest BROAD rebalancing. Emit `portfolio_plan`.
-Only fires when `has_investment_flag` is true.
+This node ALWAYS runs (it is an AND-join branch, not a skipped node). When `has_investment_flag`
+is false / there are no holdings, emit a short "no holdings to value yet" `portfolio_plan` instead
+of fabricating positions — the skip is SIGNAL-driven scope, not topology.
 
 ## Inputs
 `quote_data` (from N-QUOTE-FETCHER — exact fetch_ts + per-ticker price/source_ts/staleness), holdings.

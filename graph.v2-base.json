@@ -214,7 +214,7 @@
    "exec_type": "inline",
    "hat": "",
    "wave": "2",
-   "conditional": true,
+   "conditional": false,
    "inputs": [
     {
      "name": "parsed_context",
@@ -253,7 +253,7 @@
    "exec_type": "inline",
    "hat": "",
    "wave": "2",
-   "conditional": true,
+   "conditional": false,
    "inputs": [
     {
      "name": "parsed_context",
@@ -481,7 +481,7 @@
    "exec_type": "inline",
    "hat": "",
    "wave": "4",
-   "conditional": true,
+   "conditional": false,
    "inputs": [
     {
      "name": "quote_data_seed",
@@ -536,7 +536,7 @@
    "exec_type": "inline",
    "hat": "",
    "wave": "4",
-   "conditional": true,
+   "conditional": false,
    "inputs": [
     {
      "name": "quote_data",
@@ -993,6 +993,12 @@
      "type": "any",
      "signal_field": "report_frame",
      "required": false
+    },
+    {
+     "name": "challenge_list",
+     "type": "any",
+     "signal_field": "challenge_list",
+     "required": false
     }
    ],
    "outputs": [
@@ -1082,7 +1088,7 @@
    "scale_gates": {},
    "rationale": "",
    "tool_call": {
-    "tool": "fs.write_text",
+    "tool": "fs.write_output",
     "args": {
      "path": "report_out_path",
      "content": "report_markdown"
@@ -1868,8 +1874,7 @@
    "id": "E28",
    "src": "N-QUALITY-GATE",
    "dst": "N-HITL-APPROVE",
-   "kind": "forward-conditional",
-   "gate_condition": "quality_verdict == 'PASS'"
+   "kind": "required"
   },
   {
    "id": "E29",
@@ -1958,6 +1963,12 @@
    "kind": "back-edge",
    "gate_condition": "rework_requested == True",
    "retry_cap": 2
+  },
+  {
+   "id": "E43",
+   "src": "N-HITL-APPROVE",
+   "dst": "N-EMIT-MD",
+   "kind": "required"
   }
  ],
  "metadata_v2": {

@@ -87,10 +87,16 @@ def test_v_route_not_wrapper_self_gating():
 # ---- S17 de-wrapper: E27 is the SOLE quality-retry authority (no duplicate post-graph retry) ----
 def test_s17_no_duplicate_wrapper_quality_retry():
     run_py = open(os.path.join(BUILD, "wrapper", "run.py")).read()
-    # run_report_checks may exist as deterministic test backing in checks.py but must NOT be driven
-    # as a second post-graph quality-retry from run.py (E27 is the sole authority).
-    assert "run_report_checks" not in run_py, "wrapper/run.py must not drive a duplicate quality-retry"
-    # finalize() defense-in-depth compliance injection is RETAINED (not routing) — disclaimer path.
+    # Q1 (audit-2026-06-14): the wrapper now runs the FULL deterministic compliance battery as a
+    # LIVE, LOG-ONLY backstop (was disclaimer-only — glossary/plain-summary/no-stock-pick had no
+    # backstop under the inline-collapsing LLM gate). "Warn-loud, still ship": it emits ⚠ warnings
+    # but must NOT re-drive the graph / drive a second quality retry (E27 is the sole in-graph
+    # retry authority).
+    assert "run_report_checks" in run_py, "wrapper must run the live compliance backstop"
+    assert "⚠ compliance" in run_py, "the backstop must be LOG-ONLY (warn), not a routing authority"
+    # finalize() itself must never re-drive the graph (no harness run() call inside it).
+    fin = run_py[run_py.index("def finalize("):run_py.index("def prepare(")]
+    assert "_run(" not in fin and "import run as" not in fin, "finalize must not re-drive the graph"
     assert "finalize" in run_py and "disclaimer" in run_py.lower()
 
 
