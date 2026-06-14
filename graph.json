@@ -151,6 +151,12 @@
      "type": "any",
      "signal_field": "data_freshness_regime",
      "required": true
+    },
+    {
+     "name": "benefit_dependent",
+     "type": "any",
+     "signal_field": "benefit_dependent",
+     "required": true
     }
    ],
    "raises_signals": [],
@@ -1217,14 +1223,8 @@
    "aggregation_policy": null,
    "module_file": "modules/N-MACRO-FETCH.md",
    "scale_gates": {},
-   "rationale": "cited rates/inflation macro context (read-only, injection-hardened)",
-   "tool_call": {
-    "tool": "http.get_text",
-    "args": {},
-    "outputs": {
-     "macro_context": "value"
-    }
-   }
+   "rationale": "cited rates/inflation macro context (read-only, injection-hardened); inline estimated-fallback, never halts",
+   "tool_call": null
   },
   "N-STRATEGY-FANOUT": {
    "id": "N-STRATEGY-FANOUT",
@@ -1456,6 +1456,12 @@
      "name": "wealth_bracket",
      "type": "any",
      "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "benefit_dependent",
+     "type": "any",
+     "signal_field": "benefit_dependent",
      "required": false
     }
    ],
@@ -1811,14 +1817,14 @@
   },
   {
    "id": "E22",
-   "src": "N-SYNTHESIS-AGG",
+   "src": "N-FRAME-MERGE",
    "dst": "N-CHART-SPEC",
    "kind": "required",
    "split_from": "report"
   },
   {
    "id": "E23",
-   "src": "N-SYNTHESIS-AGG",
+   "src": "N-FRAME-MERGE",
    "dst": "N-DISCLAIMER",
    "kind": "required",
    "split_from": "report"
@@ -1932,13 +1938,6 @@
    "and_join_group": "fslot"
   },
   {
-   "id": "E40",
-   "src": "N-FRAME-MERGE",
-   "dst": "N-REPORT",
-   "kind": "required",
-   "and_join_group": "repslot"
-  },
-  {
    "id": "E41",
    "src": "N-HITL-APPROVE",
    "dst": "N-EMIT-MD",
@@ -1958,14 +1957,14 @@
    "src": "N-FRAME-SELECT",
    "dst": "N-FRAME-SURVIVAL",
    "kind": "forward-conditional",
-   "gate_condition": "wealth_bracket == 'survival'"
+   "gate_condition": "wealth_bracket in {'destitute','homeless','working-poor'} or benefit_dependent == true"
   },
   {
    "id": "RI__N-FRAME-SELECT__N-FRAME-HNW__forward-conditional__c1",
    "src": "N-FRAME-SELECT",
    "dst": "N-FRAME-HNW",
    "kind": "forward-conditional",
-   "gate_condition": "wealth_bracket == 'hnw'"
+   "gate_condition": "wealth_bracket in {'wealthy','ultra-HNW'} and benefit_dependent != true"
   },
   {
    "id": "RI__N-FRAME-SELECT__N-FRAME-STANDARD__required__else",

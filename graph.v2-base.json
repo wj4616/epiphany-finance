@@ -151,6 +151,12 @@
      "type": "any",
      "signal_field": "data_freshness_regime",
      "required": true
+    },
+    {
+     "name": "benefit_dependent",
+     "type": "any",
+     "signal_field": "benefit_dependent",
+     "required": true
     }
    ],
    "raises_signals": [],
@@ -1217,14 +1223,8 @@
    "aggregation_policy": null,
    "module_file": "modules/N-MACRO-FETCH.md",
    "scale_gates": {},
-   "rationale": "cited rates/inflation macro context (read-only, injection-hardened)",
-   "tool_call": {
-    "tool": "http.get_text",
-    "args": {},
-    "outputs": {
-     "macro_context": "value"
-    }
-   }
+   "rationale": "cited rates/inflation macro context (read-only, injection-hardened); inline estimated-fallback, never halts",
+   "tool_call": null
   },
   "N-STRATEGY-FANOUT": {
    "id": "N-STRATEGY-FANOUT",
@@ -1456,6 +1456,12 @@
      "name": "wealth_bracket",
      "type": "any",
      "signal_field": "wealth_bracket",
+     "required": false
+    },
+    {
+     "name": "benefit_dependent",
+     "type": "any",
+     "signal_field": "benefit_dependent",
      "required": false
     }
    ],
@@ -1818,14 +1824,14 @@
   },
   {
    "id": "E22",
-   "src": "N-SYNTHESIS-AGG",
+   "src": "N-FRAME-MERGE",
    "dst": "N-CHART-SPEC",
    "kind": "required",
    "split_from": "report"
   },
   {
    "id": "E23",
-   "src": "N-SYNTHESIS-AGG",
+   "src": "N-FRAME-MERGE",
    "dst": "N-DISCLAIMER",
    "kind": "required",
    "split_from": "report"
@@ -1937,13 +1943,6 @@
    "dst": "N-FRAME-MERGE",
    "kind": "required",
    "and_join_group": "fslot"
-  },
-  {
-   "id": "E40",
-   "src": "N-FRAME-MERGE",
-   "dst": "N-REPORT",
-   "kind": "required",
-   "and_join_group": "repslot"
   },
   {
    "id": "E41",

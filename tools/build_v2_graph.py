@@ -70,11 +70,15 @@ def build_v2_base(v1: dict) -> dict:
         # refuse terminal (early_exit target)
         _node("N-REFUSE", "SYNTHESIS", wave="0", tier="model-small", inputs=["preflight_ok"],
               outputs=["refusal_message"], rationale="early_exit terminal: refuse on no-context/insufficient"),
-        # macro (wave 2, read-only tool_call) — feeds research-agg AND-join (rslot)
+        # macro (wave 2) — feeds research-agg AND-join (rslot). INLINE reasoner like its
+        # ECO/LOC/MKT siblings (network is wrapper-owned per the S11 design principle): it reasons
+        # cited macro context when available, else clearly-labelled `(estimated)` defaults — and
+        # NEVER halts. A bare `http.get_text` binding with empty args raised KeyError('url') and
+        # hard-killed the whole graph; the estimated-fallback path in the module was unreachable.
         _node("N-MACRO-FETCH", "ANALYZER", wave="2", inputs=["wealth_bracket", "parsed_context"],
               outputs=["macro_context"],
-              tool_call={"tool": "http.get_text", "args": {}, "outputs": {"macro_context": "value"}},
-              rationale="cited rates/inflation macro context (read-only, injection-hardened)"),
+              rationale="cited rates/inflation macro context (read-only, injection-hardened); "
+                        "inline estimated-fallback, never halts"),
         # strategy fan-out region (wave 3.5)
         _node("N-STRATEGY-FANOUT", "GENERATOR", wave="3.5", inputs=["situation_analysis"],
               outputs=["strategy_seed"], rationale="parallel_merge source: budget/income/portfolio framings"),
@@ -131,14 +135,26 @@ def build_v2_base(v1: dict) -> dict:
     edges.append(_e("E34", "N-INCOME-ENGINE", "N-BENEFIT-SAFETY", split="synth"))
     edges.append(_e("E35", "N-BENEFIT-SAFETY", "N-SYNTHESIS-AGG", ajg="sslot"))
 
-    # (8) frame region: N-FRAME-SELECT runs off synthesis (linear, NOT part of the chart/disclaimer
-    # report fan-out region — leave E36 untagged so detect_regions keeps the clean v1 2-branch report
-    # region); frames OR-merge -> report (repslot).
+    # (8) frame sub-DAG: runs right after N-SYNTHESIS-AGG, then SOURCES the chart/disclaimer `report`
+    # fan-out region. Rationale — the original wiring hung the frame sub-DAG off synthesis AS WELL AS
+    # the 2-branch report region, leaving synthesis with TWO forward out-edges after the region
+    # sibling-chain rewrite; a serial router treats that as open-topology and re-serves synthesis
+    # forever (the v2 ship-blocker). The frame sub-DAG is multi-hop (select->xor->merge), so it can't
+    # be a `report` region branch itself (`_common_join` needs a direct shared join). Fix: synthesis
+    # fans out to ONE thing (the frame chain); the chain ends at N-FRAME-MERGE, which becomes the
+    # report region SOURCE. So the spine is synthesis -> frame-select -> frames -> frame-merge ->
+    # (report region: chart -> disclaimer) -> report. report_frame is in state before N-REPORT (read
+    # as a plain input — NO repslot join edge), and no repslot-contributing node carries a 2nd forward
+    # edge, so verify reports a clean fan-out region (no convergence-without-region WARN).
     edges.append(_e("E36", "N-SYNTHESIS-AGG", "N-FRAME-SELECT"))
     edges.append(_e("E37", "N-FRAME-SURVIVAL", "N-FRAME-MERGE", ajg="fslot"))
     edges.append(_e("E38", "N-FRAME-STANDARD", "N-FRAME-MERGE", ajg="fslot"))
     edges.append(_e("E39", "N-FRAME-HNW", "N-FRAME-MERGE", ajg="fslot"))
-    edges.append(_e("E40", "N-FRAME-MERGE", "N-REPORT", ajg="repslot"))
+    # N-FRAME-MERGE sources the report region (re-point the two split_from='report' branch edges off
+    # synthesis). No E40 frame-merge->report repslot edge: report_frame is consumed as an input and
+    # spine order guarantees frame-merge precedes N-REPORT.
+    by_id["E22"]["src"] = "N-FRAME-MERGE"
+    by_id["E23"]["src"] = "N-FRAME-MERGE"
     # N-FRAME-SELECT's case/default edges -> frames come from the quality_gate lowering.
 
     # (8.5) HITL plan-approval: PASS now routes to HITL, then approve->emit / rework->report(back-edge)
@@ -172,6 +188,13 @@ def build_v2_base(v1: dict) -> dict:
     # S9: N-CLASSIFY additionally emits benefit_dependency_flags + the data_freshness_regime seed.
     _add_output("N-CLASSIFY", "benefit_dependency_flags")
     _add_output("N-CLASSIFY", "data_freshness_regime")
+    # FLAT benefit-dependency routing flag = OR(ssdi,ssi,medicaid,snap). A *scalar* bool (like
+    # has_investment_flag) so the N-FRAME-SELECT survival gate can read it directly: routing a gate
+    # on `benefit_dependency_flags.ssi == true` would (intentionally, with a scalar-dotted-read WARN)
+    # type the whole flags OBJECT as bool and reject the dict. The flat flag is the idiomatic seam
+    # and makes benefit-dependency a first-class survival-frame driver (not just bracket).
+    _add_output("N-CLASSIFY", "benefit_dependent")
+    _add_input("N-FRAME-SELECT", "benefit_dependent")      # survival frame fires for benefit-dependents
     _add_input("N-CHART-SPEC", "data_freshness_regime")     # freshness signal -> skip price charts
     # benefit_dependency_flags already consumed by N-BENEFIT-SAFETY (input declared).
 

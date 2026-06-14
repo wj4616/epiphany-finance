@@ -31,9 +31,15 @@ def _t(spec, node, state):
 @pytest.mark.parametrize("node,state,expect", [
     ("N-PREFLIGHT", {"preflight_ok": True}, "N-CONTEXT-INGEST"),
     ("N-PREFLIGHT", {"preflight_ok": False}, "N-REFUSE"),
-    ("N-FRAME-SELECT", {"wealth_bracket": "survival"}, "N-FRAME-SURVIVAL"),
+    # route on ACTUAL classifier bracket VALUES (not the frame ids 'survival'/'hnw', which a
+    # classifier never emits — that bug made every user fall through to standard).
+    ("N-FRAME-SELECT", {"wealth_bracket": "destitute"}, "N-FRAME-SURVIVAL"),
+    ("N-FRAME-SELECT", {"wealth_bracket": "working-poor"}, "N-FRAME-SURVIVAL"),
+    # benefit dependency routes to survival even from a non-low bracket (flat benefit_dependent flag)
+    ("N-FRAME-SELECT", {"wealth_bracket": "lower-middle", "benefit_dependent": True}, "N-FRAME-SURVIVAL"),
     ("N-FRAME-SELECT", {"wealth_bracket": "middle"}, "N-FRAME-STANDARD"),
-    ("N-FRAME-SELECT", {"wealth_bracket": "hnw"}, "N-FRAME-HNW"),
+    ("N-FRAME-SELECT", {"wealth_bracket": "ultra-HNW"}, "N-FRAME-HNW"),
+    ("N-FRAME-SELECT", {"wealth_bracket": "wealthy"}, "N-FRAME-HNW"),
     ("N-QUALITY-GATE", {"quality_verdict": "PASS"}, "N-HITL-APPROVE"),
     ("N-QUALITY-GATE", {"quality_verdict": "FAIL", "rc__N-QUALITY-GATE": 0}, "N-REPORT"),
     ("N-HITL-APPROVE", {"plan_approved": True}, "N-EMIT-MD"),

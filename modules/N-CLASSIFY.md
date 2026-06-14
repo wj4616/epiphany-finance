@@ -20,6 +20,10 @@ LOWER bracket (more conservative, more protective guidance).
 ## v2 additions (S9)
 Additionally emit:
 - `benefit_dependency_flags` — `{ssdi, ssi, medicaid, snap}` (bools) detected from intake; drives the
-  benefit-safety node (N-BENEFIT-SAFETY) and the survival report frame.
+  benefit-safety node (N-BENEFIT-SAFETY).
+- `benefit_dependent` — a FLAT bool = `ssdi or ssi or medicaid or snap`. This is the routing flag the
+  N-FRAME-SELECT survival gate reads (a gate cannot deref the flags object as `…ssi == true` without
+  mistyping the whole object as bool). True ⇒ the survival report frame even when the bracket is not
+  itself a low one.
 - `data_freshness_regime` seed — `FRESH|CACHED|STALE|OFFLINE` plumbing carried forward and consumed
   by N-CHART-SPEC to skip price charts on STALE/OFFLINE (signal-driven, not a routing edge).

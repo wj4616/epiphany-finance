@@ -10,8 +10,8 @@
     "N-FRAME-SELECT": {
       "kind": "quality_gate",
       "cases": [
-        {"pred": "wealth_bracket == 'survival'", "target": "N-FRAME-SURVIVAL"},
-        {"pred": "wealth_bracket == 'hnw'", "target": "N-FRAME-HNW"}
+        {"pred": "wealth_bracket in {'destitute','homeless','working-poor'} or benefit_dependent == true", "target": "N-FRAME-SURVIVAL"},
+        {"pred": "wealth_bracket in {'wealthy','ultra-HNW'} and benefit_dependent != true", "target": "N-FRAME-HNW"}
       ],
       "default": "N-FRAME-STANDARD"
     },

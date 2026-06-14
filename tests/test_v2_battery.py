@@ -63,10 +63,15 @@ def test_v_compiler_verify_exit0():
 
 # ---- V-ROUTE: bracket routing is a compiler-lowered EDGE, not a Python conditional ----
 def test_v_route_bracket_is_compiler_lowered(g):
-    for br, expect in [("survival", "N-FRAME-SURVIVAL"), ("middle", "N-FRAME-STANDARD"),
-                       ("hnw", "N-FRAME-HNW")]:
-        r = route.choose_successor(g, "N-FRAME-SELECT", {"wealth_bracket": br})
-        assert r.status == "ok" and r.target == expect
+    # ACTUAL classifier bracket values (the frame ids 'survival'/'hnw' are NOT bracket values; a
+    # gate that compared them was permanently dead -> every user got the standard frame).
+    for st, expect in [({"wealth_bracket": "destitute"}, "N-FRAME-SURVIVAL"),
+                       ({"wealth_bracket": "working-poor"}, "N-FRAME-SURVIVAL"),
+                       ({"wealth_bracket": "middle", "benefit_dependent": True}, "N-FRAME-SURVIVAL"),
+                       ({"wealth_bracket": "middle"}, "N-FRAME-STANDARD"),
+                       ({"wealth_bracket": "ultra-HNW"}, "N-FRAME-HNW")]:
+        r = route.choose_successor(g, "N-FRAME-SELECT", st)
+        assert r.status == "ok" and r.target == expect, (st, r.target)
     # the routing edges exist and are compiler-emitted (RI__ prefix), not hand-wired
     out_edges = [e for e in g.edges if e.src == "N-FRAME-SELECT"]
     assert all(e.id.startswith("RI__") for e in out_edges), [e.id for e in out_edges]

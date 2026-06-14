@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""Full inline E2E (build-plan fix G): drive the 22-node graph to a PASS report by reasoning each
-node (realistic, spec-compliant outputs), then run the wrapper finalize. Proves the inline loop +
-produces a real report.md/report.pdf + a recorded_state fixture. Heavy/manual — not part of CI.
+"""Full inline E2E: drive the v2 36-node graph to a PASS report by reasoning each node (realistic,
+spec-compliant outputs), then run the wrapper finalize. Proves the inline loop + produces a real
+report.md/report.pdf + a recorded_state fixture. Heavy/manual — not part of CI.
+
+outputs_for() must cover every node that can PAUSE for inline reasoning. Tool nodes (N-QUOTE-FETCHER,
+N-MACRO-FETCH, N-EMIT-MD, N-EMIT-PDF) are auto-run by the harness and never pause; conditional nodes
+(refuse/frame/HITL routes) pause only when their edge fires. The loop submits whatever pauses.
 
 Usage: python tests/e2e_drive.py
 """
@@ -68,7 +72,13 @@ def outputs_for(node):
                                                 "location": "Austin, TX", "risk": "moderate"}},
         "N-CLASSIFY": {"wealth_bracket": "middle", "situation_class": "employed",
                        "has_investment_flag": True, "location_available_flag": True,
-                       "priority_flags": {}},
+                       "priority_flags": {"emergency": False, "debt_crisis": False,
+                                          "housing_risk": False},
+                       # v2 (S9): benefit-safety + freshness plumbing
+                       "benefit_dependency_flags": {"ssdi": False, "ssi": False,
+                                                    "medicaid": False, "snap": False},
+                       "benefit_dependent": False,
+                       "data_freshness_regime": "FRESH"},
         "N-RESEARCH-ECO": {"economic_digest": {"inflation": "3% (estimated)", "hysa": "4% (estimated)"}},
         "N-RESEARCH-LOC": {"location_digest": {"city": "Austin, TX", "median_rent": "$1700 (estimated)"}},
         "N-RESEARCH-MKT": {"market_digest": {"equities": "broad market context (estimated)"}},
@@ -101,6 +111,27 @@ def outputs_for(node):
         "N-DISCLAIMER": {"compliance_wrap": {"bracket_additions": []}},
         "N-REPORT": {"report_markdown": REPORT_MD},
         "N-QUALITY-GATE": {"quality_verdict": "PASS"},
+        # --- v2 nodes (22 -> 36) ---
+        "N-MACRO-FETCH": {"macro_context": {"fed_funds": "5.25% (estimated)",
+                                            "cpi_yoy": "3.0% (estimated)", "provenance": "read-only"}},
+        "N-STRATEGY-FANOUT": {"strategy_seed": {"framings": ["budget", "income", "portfolio"]}},
+        "N-STRAT-CAND-BUDGET": {"cand_budget": {"focus": "tighten wants, grow savings rate to 22%"}},
+        "N-STRAT-CAND-INCOME": {"cand_income": {"focus": "+$800/mo via upskilling toward house goal"}},
+        "N-STRAT-CAND-PORTFOLIO": {"cand_portfolio": {"focus": "broad index + bond mix, periodic rebalance"}},
+        "N-STRATEGY-MERGE": {"strategy_plan": {"merged": True,
+                                               "best_elements": ["22% savings rate", "+$800/mo income path",
+                                                                 "index+bond rebalance"]}},
+        "N-BENEFIT-SAFETY": {"benefit_safety": {"applicable": False,
+                                                "note": "No benefit dependency detected; no cliff analysis needed."}},
+        "N-FRAME-SELECT": {"frame_selected": "standard"},
+        "N-FRAME-SURVIVAL": {"report_frame_survival": {"frame": "survival", "active": False}},
+        "N-FRAME-STANDARD": {"report_frame_standard": {"frame": "standard", "active": True,
+                                                       "sections": ["budget", "income", "investing"]}},
+        "N-FRAME-HNW": {"report_frame_hnw": {"frame": "hnw", "active": False}},
+        "N-FRAME-MERGE": {"report_frame": {"frame": "standard",
+                                           "sections": ["budget", "income", "investing"]}},
+        "N-HITL-APPROVE": {"plan_approved": True, "rework_requested": False},
+        "N-REFUSE": {"refusal_message": "I need a little more information first."},
     }.get(node, {})
 
 

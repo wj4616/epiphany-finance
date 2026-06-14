@@ -43,7 +43,7 @@ wiring_contract:
   mechanism: tool_call
   sites: [{tool: data.passthrough, node: N-QUOTE-FETCHER}]
   fired_marker: [{kind: ledger_tool, value: "data.passthrough"}]
-  drive_class: deterministic
+  drive_class: reasoning
   traces: [FR-V2-03b, FR-V2-05, APU-V2-05, V-TOOL]
   smoke_input: '{"quote_data_seed": {"prices": {}}}'
 
@@ -66,11 +66,12 @@ wiring_contract:
   smoke_input: '{"benefit_dependency_flags": {"ssdi": true}, "income_plan": {}}'
 
 - id: W-07
-  requirement: N-MACRO-FETCH fetches cited macro context read-only (injection-hardened); no write tools.
-  mechanism: tool_call
-  sites: [{tool: http.get_text, node: N-MACRO-FETCH}]
-  fired_marker: [{kind: ledger_tool, value: "http.get_text"}]
-  drive_class: deterministic
+  requirement: N-MACRO-FETCH provides cited-or-(estimated) macro context read-only (injection-hardened);
+    no write tools; INLINE reasoner (never a bare http.get_text tool node — that hard-failed KeyError('url')).
+  mechanism: node_body
+  sites: [{node: N-MACRO-FETCH}]
+  fired_marker: [{kind: driver_signal, value: "macro_context"}]
+  drive_class: reasoning
   traces: [FR-V2-05, APU-V2-06]
   smoke_input: '{"wealth_bracket": "middle"}'
 
