@@ -1,0 +1,189 @@
+{
+  "preflight_ok": true,
+  "parsed_context": {
+    "income": 5200,
+    "holdings": [
+      "VTI",
+      "BND"
+    ],
+    "location": "Austin, TX",
+    "risk": "moderate"
+  },
+  "wealth_bracket": "middle",
+  "situation_class": "employed",
+  "has_investment_flag": true,
+  "location_available_flag": true,
+  "priority_flags": {
+    "emergency": false,
+    "debt_crisis": false,
+    "housing_risk": false
+  },
+  "benefit_dependency_flags": {
+    "ssdi": false,
+    "ssi": false,
+    "medicaid": false,
+    "snap": false
+  },
+  "benefit_dependent": false,
+  "data_freshness_regime": "FRESH",
+  "economic_digest": {
+    "inflation": "3% (estimated)",
+    "hysa": "4% (estimated)"
+  },
+  "location_digest": {
+    "city": "Austin, TX"
+  },
+  "market_digest": {
+    "equities": "context"
+  },
+  "quote_data": {
+    "prices": {
+      "VTI": {
+        "price": 372.45
+      }
+    }
+  },
+  "macro_context": {
+    "fed_funds": "5.25% (estimated)",
+    "cpi_yoy": "3.0% (estimated)",
+    "provenance": "read-only"
+  },
+  "research_digest": {
+    "ok": true
+  },
+  "situation_analysis": {
+    "levers": [
+      "grow emergency fund",
+      "invest surplus"
+    ]
+  },
+  "strategy_seed": {
+    "framings": [
+      "budget",
+      "income",
+      "portfolio"
+    ]
+  },
+  "cand_budget": {
+    "focus": "tighten wants, grow savings rate to 22%"
+  },
+  "cand_income": {
+    "focus": "+$800/mo via upskilling toward house goal"
+  },
+  "cand_portfolio": {
+    "focus": "broad index + bond mix, periodic rebalance"
+  },
+  "strategy_plan": {
+    "merged": true,
+    "best_elements": [
+      "22% savings rate",
+      "+$800/mo income path",
+      "index+bond rebalance"
+    ]
+  },
+  "budget_plan": {
+    "allocation_at_current_income": {
+      "needs": 50,
+      "wants": 30,
+      "save": 20
+    },
+    "income_target": 6000,
+    "income_gap": 800,
+    "investable_surplus": 1040,
+    "suggested_allocation_split": {
+      "index": 70,
+      "bonds": 20,
+      "hysa": 10
+    },
+    "compound_projections": [
+      {
+        "years": 10,
+        "nominal": 180000
+      }
+    ]
+  },
+  "income_plan": {
+    "current_income_analysis": "sustainable",
+    "target_income_analysis": "reach $6000/mo",
+    "income_gap_passthrough": 800,
+    "concrete_paths": [
+      "upskill",
+      "negotiate raise"
+    ],
+    "upskilling_suggestions": [
+      "certification"
+    ]
+  },
+  "budget_verdict": {
+    "pass": true,
+    "issues": []
+  },
+  "income_verdict": {
+    "pass": true,
+    "issues": []
+  },
+  "challenge_list": [],
+  "portfolio_plan": {
+    "current_holdings_analysis": "valued at live prices",
+    "rebalancing_suggestions": "shift toward target broad mix",
+    "quote_freshness_statement": "prices timestamped"
+  },
+  "benefit_safety": {
+    "applicable": false,
+    "note": "No benefit dependency detected; no cliff analysis needed."
+  },
+  "verified_advice": {
+    "ok": true
+  },
+  "frame_selected": "standard",
+  "report_frame_standard": {
+    "frame": "standard",
+    "active": true,
+    "sections": [
+      "budget",
+      "income",
+      "investing"
+    ]
+  },
+  "report_frame": {
+    "frame": "standard",
+    "sections": [
+      "budget",
+      "income",
+      "investing"
+    ]
+  },
+  "chart_specs": [
+    {
+      "type": "pie",
+      "title": "Budget allocation",
+      "labels": [
+        "needs",
+        "wants",
+        "save"
+      ],
+      "values": [
+        50,
+        30,
+        20
+      ]
+    },
+    {
+      "type": "bar",
+      "title": "Portfolio Breakdown",
+      "labels": [
+        "VTI",
+        "BND"
+      ],
+      "values": [
+        60,
+        50
+      ]
+    }
+  ],
+  "compliance_wrap": {
+    "bracket_additions": []
+  },
+  "report_markdown": "## What this means for you\nYou earn more than you spend, which is great. Put your extra money toward a fuller emergency fund\nfirst, then steady investing in broad, low-cost funds. Keep debt payments on track.\n\n## Budget\nYour monthly take-home is $5,200. A 50/30/20 split suggests ~$2,600 needs, ~$1,560 wants,\n~$1,040 to savings + investing. (estimated)\n\n## Income\nDirection A: at your current income you can comfortably cover essentials. Direction B: to reach\nyour house goal faster you'd need about $800/mo more \u2014 see concrete paths below.\n\n## Investing\nConsider a diversified mix of broad index funds and bonds (for example a total-market fund plus a\nbond fund). We do not recommend specific stocks or compare one stock against another.\n\n## Glossary\n- ETF: a low-cost fund that holds many investments at once.\n- Emergency fund: 3\u20136 months of expenses kept in cash for surprises.\n- Compound interest: earning returns on your past returns over time.\n",
+  "quality_verdict": "PASS"
+}
